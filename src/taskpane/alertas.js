@@ -153,13 +153,14 @@ function listar({ estado, tipo, para, papel } = {}) {
 }
 
 function puedeDocumentar(a, pid) {
-  return a.para.includes(pid) || flujo.puedeAsignar(pid);
+  return flujo.puede(pid, "documentar-alertas") && (a.para.includes(pid) || flujo.puedeAsignar(pid));
 }
 
 async function responder(id, { respuesta, comentarios }, { por } = {}) {
   const a = datos.alertas.find((x) => x.id === id);
   if (!a) return { ok: false, error: "No existe esa alerta." };
   if (a.estado !== "Abierta") return { ok: false, error: "Esa alerta ya está documentada." };
+  if (!flujo.puede(por, "documentar-alertas")) return { ok: false, error: "Su perfil no tiene permiso para documentar y registrar alertas." };
   if (!puedeDocumentar(a, por)) return { ok: false, error: "Solo quien recibió la alerta, un supervisor o el socio pueden documentarla." };
   if (!RESPUESTAS.includes(respuesta)) return { ok: false, error: "Elija una respuesta." };
   if (respuesta !== "Atendida" && !(comentarios && comentarios.trim())) return { ok: false, error: "Escriba el comentario que justifica la respuesta." };

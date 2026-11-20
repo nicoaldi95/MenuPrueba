@@ -16,6 +16,7 @@
 
 import { PAQUETES } from "./botones.config.js";
 import { ROLES, REGLAS, PERSONAS, ALMACEN } from "./flujo.config.js";
+import { puedePerfil, perfilDesdeRoles, PERFILES, ACCIONES, nombrePerfil, matriz } from "./permisos.js";
 import { crearAlmacen } from "./almacen.js";
 
 /* global window, document */
@@ -83,6 +84,7 @@ function completarDatos() {
   (datos.personas || []).forEach((x) => {
     if (x.activo === undefined) x.activo = true;
     if (x.correo === undefined) x.correo = "";
+    if (!x.perfil || !PERFILES.some((p) => p.id === x.perfil)) x.perfil = perfilDesdeRoles(x.roles);
   });
 }
 
@@ -370,7 +372,8 @@ async function fijarFechas(id, { programada, vence }, { por } = {}) {
   return { ok: true, papel: ficha(id) };
 }
 
-async function configurar({ rolesActivos: nuevos, separarFunciones } = {}) {
+async function configurar({ rolesActivos: nuevos, separarFunciones } = {}, { por } = {}) {
+  if (!puede(por, "modificar-perfiles")) return { ok: false, error: sinPermiso("modificar-perfiles") };
   if (nuevos) {
     const ids = new Set(nuevos.concat(ROLES.filter((r) => r.fijo).map((r) => r.id)));
     if (Object.values(datos.papeles).some((p) => p.estado === ESTADO.REVISION))
@@ -398,6 +401,13 @@ function puedeAdministrar(pid) {
   return !!x && x.activo !== false && REGLAS.puedenAdministrarUsuarios.some((r) => x.roles.includes(r));
 }
 
+/* Permiso de la matriz por perfil. */
+function puede(pid, accion) {
+  const x = persona(pid);
+  return !!x && x.activo !== false && puedePerfil(x.perfil, accion);
+}
+const sinPermiso = (accion) => "Su perfil no tiene permiso para: " + ((ACCIONES.find((a) => a.id === accion) || {}).nombre || accion).toLowerCase() + ".";
+
 function enUso(pid) {
   const papeles = Object.values(datos.papeles);
   return {
@@ -407,19 +417,25 @@ function enUso(pid) {
 }
 
 async function guardarPersona(x, { por } = {}) {
-  if (!puedeAdministrar(por)) return { ok: false, error: "Solo " + REGLAS.puedenAdministrarUsuarios.map(nombreRol).join(" o ") + " pueden administrar usuarios." };
+  const nueva = !x.id || !persona(x.id);
+  const accion = nueva ? "crear-usuario" : "modificar-perfiles";
+  if (!puede(por, accion)) return { ok: false, error: sinPermiso(accion) };
+  if (x.perfil && !PERFILES.some((p) => p.id === x.perfil)) return { ok: false, error: "Perfil no válido." };
   const nombre = String(x.nombre || "").trim();
   if (!nombre) return { ok: false, error: "Escriba el nombre." };
   if (!x.roles || !x.roles.length) return { ok: false, error: "Elija al menos un rol." };
   if (x.correo && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(x.correo)) return { ok: false, error: "El correo no es válido." };
   if ((datos.personas || []).some((y) => y.id !== x.id && y.nombre.toLowerCase() === nombre.toLowerCase())) return { ok: false, error: "Ya existe un usuario con ese nombre." };
-  const limpio = { id: x.id || "p-" + Date.now().toString(36), nombre, cargo: String(x.cargo || "").trim(), correo: String(x.correo || "").trim(), roles: x.roles.slice(), activo: x.activo !== false };
+  const limpio = { id: x.id || "p-" + Date.now().toString(36), nombre, cargo: String(x.cargo || "").trim(), correo: String(x.correo || "").trim(), roles: x.roles.slice(), perfil: x.perfil || (persona(x.id) || {}).perfil || perfilDesdeRoles(x.roles), activo: x.activo !== false };
   const i = datos.personas.findIndex((y) => y.id === limpio.id);
   if (i >= 0) {
     // quitar un rol a quien ya lo ejerce en un papel abierto dejaría el papel trabado
     const perdidos = datos.personas[i].roles.filter((r) => !limpio.roles.includes(r));
     const trabado = Object.entries(datos.papeles).find(([, p]) => p.estado !== ESTADO.FIRMADO && perdidos.some((r) => p.asignados[r] === limpio.id));
     if (trabado) return { ok: false, error: "Está asignado como «" + nombreRol(perdidos.find((r) => datos.papeles[trabado[0]].asignados[r] === limpio.id)) + "» en " + trabado[0] + ". Cambie esa asignación primero." };
+    // el último administrador no puede perder la capacidad de administrar
+    const antes = datos.personas[i];
+    if (puedeAdministrar(antes.id) && !limpio.roles.some((r) => REGLAS.puedenAdministrarUsuarios.includes(r)) && datos.personas.filter((y) => y.activo !== false && puedeAdministrar(y.id)).length === 1) return { ok: false, error: "Debe quedar al menos un administrador activo." };
     datos.personas[i] = limpio;
   } else datos.personas.push(limpio);
   await persistir();
@@ -428,7 +444,7 @@ async function guardarPersona(x, { por } = {}) {
 }
 
 async function activarPersona(pid, activo, { por } = {}) {
-  if (!puedeAdministrar(por)) return { ok: false, error: "No tiene permiso para administrar usuarios." };
+  if (!puede(por, "habilitar-usuario")) return { ok: false, error: sinPermiso("habilitar-usuario") };
   const x = persona(pid);
   if (!x) return { ok: false, error: "No existe ese usuario." };
   if (!activo) {
@@ -445,7 +461,7 @@ async function activarPersona(pid, activo, { por } = {}) {
 }
 
 async function eliminarPersona(pid, { por } = {}) {
-  if (!puedeAdministrar(por)) return { ok: false, error: "No tiene permiso para administrar usuarios." };
+  if (!puede(por, "eliminar-usuario")) return { ok: false, error: sinPermiso("eliminar-usuario") };
   if (pid === por) return { ok: false, error: "No puede eliminarse a sí mismo." };
   const u = enUso(pid);
   if (u.asignado || u.historial) return { ok: false, error: "Tiene movimientos en el historial de los papeles. Desactívelo en lugar de eliminarlo." };
@@ -553,6 +569,11 @@ const api = {
   papeles: () => papelesDelMenu(),
   personas: (soloActivas) => copia(datos.personas.filter((x) => !soloActivas || x.activo !== false)),
   puedeAdministrar,
+  puede,
+  PERFILES,
+  ACCIONES,
+  nombrePerfil,
+  matriz,
   puedeAsignar: (pid) => {
     const x = persona(pid);
     return !!x && x.activo !== false && REGLAS.puedenAsignar.some((r) => x.roles.includes(r));

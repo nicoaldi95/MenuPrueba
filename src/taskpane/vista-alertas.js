@@ -86,7 +86,7 @@ function montar(modoDoc) {
               });
               t2.append(b);
             }
-          } else t2.append(el("div", "fl-hist-l2", "Solo quien recibió la alerta, un supervisor o el socio pueden documentarla."));
+          } else t2.append(el("div", "fl-hist-l2", flujo.puede(yo.id, "documentar-alertas") ? "Solo quien recibió la alerta, un supervisor o el socio pueden documentarla." : "Su perfil no puede documentar alertas."));
           if (a.papel) {
             const ver = el("button", "fl-link", "Ver papel " + a.papel);
             ver.type = "button";

@@ -55,10 +55,17 @@ export function montarUsuarios(c) {
   const pintar = () => {
     cabecera(c, "Usuarios y Perfiles", "M1-01");
     const yo = flujo.usuarioActual();
-    const admin = flujo.puedeAdministrar(yo.id);
-    const todos = flujo.personas();
+    const verUsuarios = flujo.puede(yo.id, "ver-usuarios");
+    const pCrear = flujo.puede(yo.id, "crear-usuario");
+    const pPerfiles = flujo.puede(yo.id, "modificar-perfiles");
+    const pHabilitar = flujo.puede(yo.id, "habilitar-usuario");
+    const pEliminar = flujo.puede(yo.id, "eliminar-usuario");
+    const admin = pCrear || pPerfiles || pHabilitar || pEliminar;
+    const todos = verUsuarios ? flujo.personas() : [];
     c.append(el("p", "fm-ayuda", todos.length + " usuarios · " + todos.filter((p) => p.activo).length + " activos"));
-    if (!admin) c.append(mensaje("Solo el perfil «" + flujo.nombreRol("aprueba") + "» puede administrar usuarios. Usted puede consultarlos.", "aviso"));
+    c.append(el("p", "fm-ayuda", "Su perfil: " + flujo.nombrePerfil(yo.perfil)));
+    if (!verUsuarios) c.append(mensaje("Su perfil no puede consultar usuarios.", "aviso"));
+    else if (!admin) c.append(mensaje("Su perfil solo permite consultar usuarios.", "aviso"));
 
     /* --- roles del proyecto --- */
     const roles = el("details", "fl-bloque");
@@ -68,10 +75,10 @@ export function montarUsuarios(c) {
       const cb = el("input");
       cb.type = "checkbox";
       cb.checked = flujo.rolesActivos().some((x) => x.id === r.id);
-      cb.disabled = !!r.fijo || !admin;
+      cb.disabled = !!r.fijo || !pPerfiles;
       cb.addEventListener("change", async () => {
         const nuevos = flujo.ROLES.filter((x) => (x.id === r.id ? cb.checked : flujo.rolesActivos().some((y) => y.id === x.id))).map((x) => x.id);
-        const res = await flujo.configurar({ rolesActivos: nuevos });
+        const res = await flujo.configurar({ rolesActivos: nuevos }, { por: yo.id });
         aviso = res.ok ? null : { texto: res.error, tipo: "error" };
         pintar();
       });
@@ -82,9 +89,9 @@ export function montarUsuarios(c) {
     const cbs = el("input");
     cbs.type = "checkbox";
     cbs.checked = flujo.separarFunciones();
-    cbs.disabled = !admin;
+    cbs.disabled = !pPerfiles;
     cbs.addEventListener("change", async () => {
-      await flujo.configurar({ separarFunciones: cbs.checked });
+      await flujo.configurar({ separarFunciones: cbs.checked }, { por: yo.id });
       pintar();
     });
     sep.append(cbs, el("span", null, "Quien elabora un papel no puede revisarlo ni firmarlo"));
@@ -93,8 +100,26 @@ export function montarUsuarios(c) {
 
     if (aviso) c.append(mensaje(aviso.texto, aviso.tipo));
 
+    /* --- matriz de permisos --- */
+    const mt = el("details", "fl-bloque");
+    mt.dataset.bloque = "matriz";
+    mt.append(el("summary", null, "Permisos por perfil"));
+    const tabla = el("table", "fm-matriz");
+    const th = el("tr");
+    th.append(el("th", null, "Acción"));
+    flujo.matriz().forEach((m) => th.append(el("th", null, m.nombre)));
+    tabla.append(th);
+    flujo.ACCIONES.forEach((a, i) => {
+      const tr = el("tr");
+      tr.append(el("td", null, a.nombre));
+      flujo.matriz().forEach((m) => tr.append(el("td", m.permisos[i].tiene ? "si" : "no", m.permisos[i].tiene ? "✓" : "—")));
+      tabla.append(tr);
+    });
+    mt.append(tabla);
+    c.append(mt);
+
     /* --- lista --- */
-    if (admin && !edicion) {
+    if (pCrear && !edicion) {
       const nuevo = el("button", "fl-btn", "Agregar usuario");
       nuevo.type = "button";
       nuevo.addEventListener("click", () => {
@@ -105,7 +130,7 @@ export function montarUsuarios(c) {
       });
       c.append(nuevo);
     }
-    if (edicion) c.append(formulario(borrador || (edicion === "nuevo" ? { nombre: "", cargo: "", correo: "", roles: [], activo: true } : flujo.persona(edicion)), yo));
+    if (edicion) c.append(formulario(borrador || (edicion === "nuevo" ? { nombre: "", cargo: "", correo: "", roles: [], perfil: "asistente", activo: true } : flujo.persona(edicion)), yo));
 
     todos.forEach((p) => {
       const t = el("div", "fm-tarjeta");
@@ -115,9 +140,10 @@ export function montarUsuarios(c) {
       l1.append(el("strong", null, p.nombre), el("span", "fl-estado", p.activo ? "Activo" : "Desactivado"));
       t.append(l1, el("div", "fl-hist-l2", [p.cargo, p.correo].filter(Boolean).join(" · ")));
       const chips = el("div", "fm-chips");
+      chips.append(el("span", "fm-chip fm-chip-perfil", flujo.nombrePerfil(p.perfil)));
       p.roles.forEach((r) => chips.append(el("span", "fm-chip", flujo.nombreRol(r))));
       t.append(chips);
-      if (admin) {
+      if (pPerfiles || pHabilitar || pEliminar) {
         const acc = el("div", "fm-acciones");
         const b = (txt, fn, sec = true) => {
           const x = el("button", "fl-btn" + (sec ? " fl-btn-sec" : ""), txt);
@@ -126,18 +152,20 @@ export function montarUsuarios(c) {
           acc.append(x);
           return x;
         };
-        b("Editar", () => {
+        if (pPerfiles) b("Editar", () => {
           edicion = p.id;
           borrador = null;
           aviso = null;
           pintar();
         }).dataset.accion = "editar";
-        b(p.activo ? "Desactivar" : "Activar", async () => {
+        if (pHabilitar) b(p.activo ? "Desactivar" : "Activar", async () => {
           const res = await flujo.activarPersona(p.id, !p.activo, { por: yo.id });
           aviso = res.ok ? null : { texto: res.error, tipo: "error" };
           pintar();
         }).dataset.accion = "activar";
-        if (confirmar === p.id) {
+        if (!pEliminar) {
+          /* sin permiso */
+        } else if (confirmar === p.id) {
           b("Confirmar eliminación", async () => {
             const res = await flujo.eliminarPersona(p.id, { por: yo.id });
             confirmar = null;
@@ -162,9 +190,10 @@ export function montarUsuarios(c) {
     const nombre = campo({ id: "nombre", etiqueta: "Nombre", valor: p.nombre, requerido: true });
     const cargo = campo({ id: "cargo", etiqueta: "Cargo", valor: p.cargo });
     const correo = campo({ id: "correo", etiqueta: "Correo", valor: p.correo });
-    f.append(nombre.nodo, cargo.nodo, correo.nodo);
+    const perfil = campo({ id: "perfil", etiqueta: "Perfil", tipo: "select", opciones: flujo.PERFILES.map((x) => x.nombre), valor: flujo.nombrePerfil(p.perfil || "asistente") });
+    f.append(nombre.nodo, cargo.nodo, correo.nodo, perfil.nodo);
     const grupo = el("fieldset", "fm-grupo");
-    grupo.append(el("legend", null, "Perfil (roles)"));
+    grupo.append(el("legend", null, "Roles en el flujo de los papeles"));
     const cbs = flujo.ROLES.map((r) => {
       const l = el("label", "fm-check");
       const cb = el("input");
@@ -190,7 +219,7 @@ export function montarUsuarios(c) {
     f.append(acc);
     f.addEventListener("submit", async (ev) => {
       ev.preventDefault();
-      const datos = { id: p.id, nombre: nombre.valor(), cargo: cargo.valor(), correo: correo.valor(), roles: cbs.filter((k) => k.checked).map((k) => k.value), activo: p.activo };
+      const datos = { id: p.id, nombre: nombre.valor(), cargo: cargo.valor(), correo: correo.valor(), roles: cbs.filter((k) => k.checked).map((k) => k.value), perfil: (flujo.PERFILES.find((x) => x.nombre === perfil.valor()) || {}).id, activo: p.activo };
       const res = await flujo.guardarPersona(datos, { por: yo.id });
       borrador = res.ok ? null : datos;
       if (res.ok) {
