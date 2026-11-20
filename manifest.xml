@@ -2,19 +2,21 @@
 <OfficeApp xmlns="http://schemas.microsoft.com/office/appforoffice/1.1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:bt="http://schemas.microsoft.com/office/officeappbasictypes/1.0" xmlns:ov="http://schemas.microsoft.com/office/taskpaneappversionoverrides" xsi:type="TaskPaneApp">
   <Id>fa792fb5-9e0b-4b80-a055-c4d07552bcba</Id>
   <Version>1.0.0.0</Version>
-  <ProviderName>Contoso</ProviderName>
-  <DefaultLocale>en-US</DefaultLocale>
-  <DisplayName DefaultValue="MenuPruebita"/>
-  <Description DefaultValue="A template to get started."/>
+  <ProviderName>Auditool S.A.S.</ProviderName>
+  <DefaultLocale>es-CO</DefaultLocale>
+  <DisplayName DefaultValue="AuditX"/>
+  <Description DefaultValue="AuditX: flujo de trabajo, papeles y control de auditoría dentro de Excel."/>
   <IconUrl DefaultValue="https://localhost:3000/assets/icon-32.png"/>
   <HighResolutionIconUrl DefaultValue="https://localhost:3000/assets/icon-64.png"/>
-  <SupportUrl DefaultValue="https://www.contoso.com/help"/>
-  <AppDomains>
-    <AppDomain>https://www.contoso.com</AppDomain>
-  </AppDomains>
+  <SupportUrl DefaultValue="https://github.com/nicoaldi95/MenuPrueba"/>
   <Hosts>
     <Host Name="Workbook"/>
   </Hosts>
+  <Requirements>
+    <Sets>
+      <Set Name="ExcelApi" MinVersion="1.5"/>
+    </Sets>
+  </Requirements>
   <DefaultSettings>
     <SourceLocation DefaultValue="https://localhost:3000/taskpane.html"/>
   </DefaultSettings>
@@ -72,13 +74,13 @@
         <bt:Url id="Taskpane.Url" DefaultValue="https://localhost:3000/taskpane.html"/>
       </bt:Urls>
       <bt:ShortStrings>
-        <bt:String id="GetStarted.Title" DefaultValue="Get started with your sample add-in!"/>
-        <bt:String id="CommandsGroup.Label" DefaultValue="Commands Group"/>
-        <bt:String id="TaskpaneButton.Label" DefaultValue="Show Task Pane"/>
+        <bt:String id="GetStarted.Title" DefaultValue="¡AuditX está listo!"/>
+        <bt:String id="CommandsGroup.Label" DefaultValue="AuditX"/>
+        <bt:String id="TaskpaneButton.Label" DefaultValue="Abrir AuditX"/>
       </bt:ShortStrings>
       <bt:LongStrings>
-        <bt:String id="GetStarted.Description" DefaultValue="Your sample add-in loaded successfully. Go to the HOME tab and click the 'Show Task Pane' button to get started."/>
-        <bt:String id="TaskpaneButton.Tooltip" DefaultValue="Click to Show a Taskpane"/>
+        <bt:String id="GetStarted.Description" DefaultValue="AuditX se cargó correctamente. En la pestaña Inicio, pulse «Abrir AuditX» para comenzar."/>
+        <bt:String id="TaskpaneButton.Tooltip" DefaultValue="Abre el panel de AuditX"/>
       </bt:LongStrings>
     </Resources>
   </VersionOverrides>
