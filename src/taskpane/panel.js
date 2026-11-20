@@ -22,6 +22,7 @@ import { PAQUETES, AJUSTES, RETIRADOS } from "./botones.config.js";
 import flujo from "./flujo.js";
 import { montarFicha } from "./flujo-ficha.js";
 import proyecto from "./proyecto.js";
+import empresas from "./empresas.js";
 import alertas from "./alertas.js";
 import { VISTAS } from "./vistas.js";
 import comentarios from "./comentarios.js";
@@ -447,6 +448,7 @@ export async function iniciarPanel() {
   window.AuditX.flujo = flujo;
   window.AuditX.flujo.montarFicha = montarFicha;
   window.AuditX.proyecto = proyecto;
+  window.AuditX.empresas = empresas;
   window.AuditX.alertas = alertas;
   window.AuditX.comentarios = comentarios;
   window.AuditX.AA01 = aa01;
@@ -455,6 +457,7 @@ export async function iniciarPanel() {
   try {
     await flujo.iniciar();
     await proyecto.iniciar();
+    await empresas.iniciar();
     await comentarios.iniciar();
     await aa01.cargar();
     await cargarCuestionarios();

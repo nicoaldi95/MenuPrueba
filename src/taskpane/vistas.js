@@ -24,6 +24,7 @@ import { montarEquipo } from "./vista-equipo.js";
 import { montarAA01 } from "./vista-aa01.js";
 import { montarAA02, montarAA03 } from "./vista-aa02-03.js";
 import { montarPapelHoja } from "./vista-hoja.js";
+import { montarEmpresas } from "./vista-empresas.js";
 
 /* global document, window */
 
@@ -349,6 +350,7 @@ export const montarOneDrive = vistaFormulario({
 export const VISTAS = {
   usuarios: montarUsuarios,
   "info-proyecto": montarInfoProyecto,
+  "crear-empresas": montarEmpresas,
   empresa: montarEmpresa,
   onedrive: montarOneDrive,
   "estatus-firmas": montarEstatus,

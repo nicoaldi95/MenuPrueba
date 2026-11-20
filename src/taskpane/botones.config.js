@@ -37,7 +37,7 @@ export const PAQUETES = [
         hijos: [
           { tipo: "boton", id: "usuarios", etiqueta: "Usuarios y Perfiles", accion: "flujo", codigo: "M1-01", previsto: "Mié 11 nov" },
           { tipo: "boton", id: "info-proyecto", etiqueta: "Información del proyecto", accion: "flujo", codigo: "M2-01", previsto: "Mié 11 nov" },
-          { tipo: "boton", id: "crear-empresas", etiqueta: "Crear otras empresas", accion: "pendiente", codigo: "M2-01" },
+          { tipo: "boton", id: "crear-empresas", etiqueta: "Crear otras empresas", accion: "flujo", codigo: "M2-01" },
         ],
       },
       {
