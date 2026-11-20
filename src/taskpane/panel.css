@@ -775,3 +775,7 @@ button.es-papel:hover { border-color: #0c447c; }
 .fm-matriz td.si { color: #1a7f37; font-weight: 600; }
 .fm-matriz td.no { color: #8c959f; }
 .fm-chip-perfil { font-weight: 600; }
+
+/* Logo de AuditX en la parte superior del menú */
+.tp-brand-row { justify-content: center; margin-bottom: 12px; }
+.tp-logo-img { display: block; width: 100%; max-width: 200px; height: auto; }

@@ -12,8 +12,7 @@ export default function App() {
     <div className="tp" id="taskpane">
       <header className="tp-header">
         <div className="tp-brand-row">
-          <div className="tp-logo" aria-hidden="true"></div>
-          <span className="tp-title">AuditX</span>
+          <img className="tp-logo-img" src="assets/logo-auditx.png" alt="AuditX · Provided by Auditool · Complemento" width="600" height="222" />
         </div>
         <div className="tp-search">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
