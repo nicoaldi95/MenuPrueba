@@ -53,7 +53,7 @@ export const PAQUETES = [
       {
         tipo: "menu", id: "menu55", etiqueta: "Tiempo y cronograma",
         hijos: [
-          { tipo: "boton", id: "ti-tiempo", etiqueta: "TI-Tiempo Invertido", accion: "hoja", hoja: "TI - Tiempo Invertido", codigo: "M2-10" },
+          { tipo: "boton", id: "ti-tiempo", etiqueta: "TI-Tiempo Invertido", accion: "flujo", hoja: "TI - Tiempo Invertido", codigo: "M2-10", enFlujo: true },
           { tipo: "boton", id: "cronograma", etiqueta: "CR-Cronograma Auditoría", accion: "flujo", codigo: "M8-07", previsto: "Vie 13 nov" },
         ],
       },

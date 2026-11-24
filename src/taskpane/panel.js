@@ -21,6 +21,7 @@
 import { PAQUETES, AJUSTES, RETIRADOS } from "./botones.config.js";
 import flujo from "./flujo.js";
 import { iniciarTema } from "./tema.js";
+import hojaTI from "./hoja-ti.js";
 import { montarFicha } from "./flujo-ficha.js";
 import proyecto from "./proyecto.js";
 import empresas from "./empresas.js";
@@ -464,6 +465,7 @@ export async function iniciarPanel() {
     await aa01.cargar();
     await cargarCuestionarios();
     await alertas.iniciar();
+    hojaTI.vigilar();
   } catch (err) {
     console.error("AuditX: no se pudo iniciar el flujo", err);
     avisar("No se pudo leer el flujo de trabajo del libro. Revise la consola.", "error");

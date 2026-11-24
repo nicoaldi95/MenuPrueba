@@ -776,7 +776,7 @@ button.es-papel:hover { border-color: #0c447c; }
 
 /* Logo de AuditX en la parte superior del menú */
 .tp-brand-row { justify-content: left; margin-bottom: 12px; }
-.tp-logo-img { display: block; width: 100%; max-width: 150px; height: auto; }
+.tp-logo-img { display: block; width: 100%; max-width: 100px; height: auto; }
 
 /* ===== Modo noche (interruptor del encabezado; html[data-tema="oscuro"]) ===== */
 html[data-tema="oscuro"] { color-scheme: dark; }

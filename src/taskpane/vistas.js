@@ -25,6 +25,7 @@ import { montarAA01 } from "./vista-aa01.js";
 import { montarAA02, montarAA03 } from "./vista-aa02-03.js";
 import { montarPapelHoja } from "./vista-hoja.js";
 import { montarEmpresas } from "./vista-empresas.js";
+import { montarTI } from "./vista-ti.js";
 
 /* global document, window */
 
@@ -395,6 +396,7 @@ export const VISTAS = {
   pdf: montarPdf,
   "comentarios-pt": montarComentariosPT,
   "AA-08": montarEquipo,
+  "ti-tiempo": montarTI,
   "AA-01": montarAA01,
   "AA-02": montarAA02,
   "AA-03": montarAA03,
