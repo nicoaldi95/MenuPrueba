@@ -20,6 +20,7 @@
 
 import { PAQUETES, AJUSTES, RETIRADOS } from "./botones.config.js";
 import flujo from "./flujo.js";
+import { iniciarTema } from "./tema.js";
 import { montarFicha } from "./flujo-ficha.js";
 import proyecto from "./proyecto.js";
 import empresas from "./empresas.js";
@@ -428,6 +429,7 @@ function irA(id) {
 /* ------------------------------------------------------------------ arranque */
 
 export async function iniciarPanel() {
+  iniciarTema();
   raiz = document.getElementById("taskpane");
   if (!raiz || raiz.dataset.listo) return; // defensivo: no revienta si el markup cambia
   raiz.dataset.listo = "1";

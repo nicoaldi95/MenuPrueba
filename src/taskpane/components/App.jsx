@@ -13,6 +13,12 @@ export default function App() {
       <header className="tp-header">
         <div className="tp-brand-row">
           <img className="tp-logo-img" src="assets/logo-auditx.png" alt="AuditX · Provided by Auditool · Complemento" width="600" height="222" />
+          <button type="button" id="tp-tema" className="tp-tema" role="switch" aria-checked="false" aria-label="Modo noche" title="Cambiar a modo noche">
+          <span className="tp-tema-pista"><span className="tp-tema-bola">
+            <svg className="i-sol" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4" /><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4" /></svg>
+            <svg className="i-luna" width="12" height="12" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
+          </span></span>
+        </button>
         </div>
         <div className="tp-search">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
