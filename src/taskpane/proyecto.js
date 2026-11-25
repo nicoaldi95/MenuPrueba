@@ -66,7 +66,7 @@ function diferencias(antes, despues, etiquetas) {
 const ETIQ_PROYECTO = { entidad: "Entidad (cliente)", nit: "NIT / ID", firma: "Firma de auditoría", desde: "Período desde", hasta: "Período hasta", encargo: "Nombre del encargo", tipo: "Tipo de encargo", marco: "Marco normativo", fechaInforme: "Fecha del informe" };
 const ETIQ_EMPRESA = { razonSocial: "Razón social", nombreComercial: "Nombre comercial", representante: "Representante legal", actividad: "Actividad económica", ciudad: "Ciudad", direccion: "Dirección", correo: "Correo de contacto", telefono: "Teléfono", rutaOneDrive: "Carpeta OneDrive" };
 
-async function guardarProyecto(nuevo, { por } = {}) {
+async function guardarProyecto(nuevo, { por, seccion = "Información del proyecto" } = {}) {
   const sin = permiso(por);
   if (sin) return { ok: false, error: sin };
   const { corte1, corte2, ...resto } = nuevo;
@@ -75,10 +75,11 @@ async function guardarProyecto(nuevo, { por } = {}) {
   const clave = (id) => datos.cronograma.fechasClave.find((x) => x.id === id) || {};
   const c1 = corte1 === undefined ? (clave("planificacion").aplica ? clave("planificacion").fecha || "" : "") : String(corte1 || "").trim();
   const c2 = corte2 === undefined ? (clave("precierre").aplica ? clave("precierre").fecha || "" : "") : String(corte2 || "").trim();
-  if (!p.entidad) return { ok: false, error: "Escriba la entidad (cliente)." };
+  const donde = seccion === "Configurar Empresa" ? "" : " en «Configurar Empresa»";
+  if (!p.entidad) return { ok: false, error: "Escriba la entidad (cliente)" + donde + "." };
   /* Igual que el VBA: el inicio del período y el corte final son obligatorios; los cortes 1 y 2 son opcionales. */
-  if (!p.desde) return { ok: false, error: "Escriba la fecha de inicio del período de auditoría." };
-  if (!p.hasta) return { ok: false, error: "Escriba el corte final (hasta): es la fecha de cierre del período." };
+  if (!p.desde) return { ok: false, error: "Escriba la fecha de inicio del período de auditoría" + donde + "." };
+  if (!p.hasta) return { ok: false, error: "Escriba el corte final (hasta)" + donde + ": es la fecha de cierre del período." };
   const orden = [["Inicio del período", p.desde], ["Corte 1", c1], ["Corte 2", c2], ["Corte final", p.hasta]].filter((x) => x[1]);
   for (let i = 1; i < orden.length; i++) if (orden[i][1] < orden[i - 1][1]) return { ok: false, error: "«" + orden[i][0] + "» no puede ser anterior a «" + orden[i - 1][0] + "»." };
   if (p.fechaInforme && p.fechaInforme < p.hasta) return { ok: false, error: "La fecha del informe no puede ser anterior al cierre del período." };
@@ -92,7 +93,7 @@ async function guardarProyecto(nuevo, { por } = {}) {
     const n = nuevas.find((y) => y.id === x.id);
     if (x.id !== "cierre" && ((x.fecha || "") !== (n.fecha || "") || !!x.aplica !== !!n.aplica)) cambios.push(x.etiqueta + ": " + (n.aplica ? n.fecha : "no aplica"));
   });
-  anotar("Información del proyecto", cambios, por);
+  anotar(seccion, cambios, por);
   datos.proyecto = p;
   datos.cronograma.fechasClave = nuevas;
   await persistir();
