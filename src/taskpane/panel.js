@@ -26,6 +26,7 @@ import { montarFicha } from "./flujo-ficha.js";
 import proyecto from "./proyecto.js";
 import nombres from "./nombres.js";
 import logo from "./logo.js";
+import actualizarPT from "./actualizar-pt.js";
 import empresas from "./empresas.js";
 import alertas from "./alertas.js";
 import { VISTAS } from "./vistas.js";
@@ -478,6 +479,7 @@ export async function iniciarPanel() {
   window.AuditX.proyecto = proyecto;
   window.AuditX.nombres = nombres;
   window.AuditX.logo = logo;
+  window.AuditX.actualizarPT = actualizarPT;
   window.AuditX.empresas = empresas;
   window.AuditX.alertas = alertas;
   window.AuditX.comentarios = comentarios;
@@ -489,6 +491,7 @@ export async function iniciarPanel() {
     await proyecto.iniciar();
     await nombres.iniciar();
     await logo.iniciar();
+    await actualizarPT.iniciar();
     refrescarMenu();
     await empresas.iniciar();
     await comentarios.iniciar();

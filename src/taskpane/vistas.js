@@ -28,6 +28,7 @@ import { montarEmpresas } from "./vista-empresas.js";
 import { montarTI } from "./vista-ti.js";
 import { montarPersonalizar } from "./vista-nombres.js";
 import { montarLogo } from "./vista-logo.js";
+import { montarActualizarPT } from "./vista-actualizar-pt.js";
 
 /* global document, window */
 
@@ -451,6 +452,7 @@ export const VISTAS = {
   "crear-empresas": montarEmpresas,
   personalizar: montarPersonalizar,
   logo: montarLogo,
+  "actualizar-pt": montarActualizarPT,
   empresa: montarEmpresa,
   onedrive: montarOneDrive,
   "estatus-firmas": montarEstatus,
