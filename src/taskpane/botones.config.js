@@ -62,7 +62,7 @@ export const PAQUETES = [
         tipo: "menu", id: "menu3", etiqueta: "Gestión de Tareas",
         hijos: [
           { tipo: "boton", id: "tareas-asignar", etiqueta: "Asignar Tareas", accion: "flujo", codigo: "M8-02" },
-          { tipo: "boton", id: "tareas-consultar", etiqueta: "Consultar y Responder Tareas", accion: "hoja", hoja: "Registro Activ. Ejecucion", codigo: "M8-03" },
+          { tipo: "boton", id: "tareas-consultar", etiqueta: "Consultar y Responder Tareas", accion: "flujo", codigo: "M8-03" },
           { tipo: "boton", id: "tareas-kanban", etiqueta: "Kanban de Tareas", accion: "pendiente", codigo: "M10-02" },
           { tipo: "boton", id: "tareas-dashboard", etiqueta: "Dashboard de Tareas", accion: "hoja", hoja: "Dashboard Ej", codigo: "M10-01" },
         ],

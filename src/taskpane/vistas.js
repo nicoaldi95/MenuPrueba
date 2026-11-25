@@ -29,6 +29,7 @@ import { montarTI } from "./vista-ti.js";
 import { montarPersonalizar } from "./vista-nombres.js";
 import { montarLogo } from "./vista-logo.js";
 import { montarAsignarTareas } from "./vista-tareas-asignar.js";
+import { montarConsultarTareas } from "./vista-tareas-consultar.js";
 import { montarActualizarPT } from "./vista-actualizar-pt.js";
 
 /* global document, window */
@@ -454,6 +455,7 @@ export const VISTAS = {
   personalizar: montarPersonalizar,
   logo: montarLogo,
   "tareas-asignar": montarAsignarTareas,
+  "tareas-consultar": montarConsultarTareas,
   "actualizar-pt": montarActualizarPT,
   empresa: montarEmpresa,
   onedrive: montarOneDrive,
