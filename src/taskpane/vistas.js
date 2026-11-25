@@ -327,21 +327,11 @@ function calendarioPapeles(c, yo, lectura, repintar) {
 export const montarInfoProyecto = vistaFormulario({
   titulo: "Información del proyecto",
   sub: "M2-01",
-  leer: () => {
-    const k = (id) => { const x = proyecto.cronograma().fechasClave.find((y) => y.id === id) || {}; return x.aplica ? x.fecha || "" : ""; };
-    return { ...proyecto.proyecto(), corte1: k("planificacion"), corte2: k("precierre") };
-  },
+  leer: () => proyecto.proyecto(),
   campos: () => [
-    { id: "entidad", etiqueta: "Entidad (cliente)", requerido: true },
-    { id: "nit", etiqueta: "NIT / ID" },
-    { id: "firma", etiqueta: "Firma de auditoría", ayuda: "Aparece como «Presentado por» en las presentaciones y los informes." },
     { id: "encargo", etiqueta: "Nombre del encargo" },
     { id: "tipo", etiqueta: "Tipo de encargo", tipo: "select", opciones: TIPOS_ENCARGO },
     { id: "marco", etiqueta: "Marco normativo", tipo: "select", opciones: MARCOS },
-    { id: "desde", etiqueta: "Período de auditoría desde", tipo: "date", requerido: true },
-    { id: "corte1", etiqueta: "Corte 1 · planificación (opcional)", tipo: "date" },
-    { id: "corte2", etiqueta: "Corte 2 · pre-cierre (opcional)", tipo: "date" },
-    { id: "hasta", etiqueta: "Corte final · cierre del período (hasta)", tipo: "date", requerido: true },
     { id: "fechaInforme", etiqueta: "Fecha prevista del informe", tipo: "date" },
   ],
   guardar: (n, o) => proyecto.guardarProyecto(n, o),
@@ -350,21 +340,24 @@ export const montarInfoProyecto = vistaFormulario({
 
 /* ===================================================================== Configurar Empresa */
 
+/* Es el formulario «Configurar empresa» del VBA (UserForm11): entidad, NIT, firma de auditoría, período y cortes. */
 export const montarEmpresa = vistaFormulario({
   titulo: "Configurar Empresa",
   sub: "M2-01",
-  leer: () => proyecto.empresa(),
+  leer: () => {
+    const k = (id) => { const x = proyecto.cronograma().fechasClave.find((y) => y.id === id) || {}; return x.aplica ? x.fecha || "" : ""; };
+    return { ...proyecto.proyecto(), corte1: k("planificacion"), corte2: k("precierre") };
+  },
   campos: () => [
-    { id: "razonSocial", etiqueta: "Razón social", requerido: true },
-    { id: "nombreComercial", etiqueta: "Nombre comercial" },
-    { id: "representante", etiqueta: "Representante legal" },
-    { id: "actividad", etiqueta: "Actividad económica" },
-    { id: "ciudad", etiqueta: "Ciudad" },
-    { id: "direccion", etiqueta: "Dirección" },
-    { id: "correo", etiqueta: "Correo de contacto" },
-    { id: "telefono", etiqueta: "Teléfono" },
+    { id: "entidad", etiqueta: "Entidad (cliente)", requerido: true },
+    { id: "nit", etiqueta: "NIT / ID" },
+    { id: "firma", etiqueta: "Firma de auditoría", ayuda: "Aparece como «Presentado por» en las presentaciones y los informes." },
+    { id: "desde", etiqueta: "Período de auditoría desde", tipo: "date", requerido: true },
+    { id: "corte1", etiqueta: "Corte 1 · planificación (opcional)", tipo: "date" },
+    { id: "corte2", etiqueta: "Corte 2 · pre-cierre (opcional)", tipo: "date" },
+    { id: "hasta", etiqueta: "Corte final · cierre del período (hasta)", tipo: "date", requerido: true },
   ],
-  guardar: (n, o) => (n.razonSocial.trim() ? proyecto.guardarEmpresa(n, o) : Promise.resolve({ ok: false, error: "Escriba la razón social." })),
+  guardar: (n, o) => proyecto.guardarProyecto(n, { ...o, seccion: "Configurar Empresa" }),
 });
 
 /* ===================================================================== Carpeta OneDrive */

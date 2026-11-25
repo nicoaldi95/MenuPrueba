@@ -29,7 +29,7 @@ const cronogramaVacio = () => ({
 });
 
 const vacio = () => ({
-  proyecto: { entidad: "", nit: "", desde: "", hasta: "", encargo: "", tipo: TIPOS_ENCARGO[0], marco: MARCOS[0], fechaInforme: "" },
+  proyecto: { entidad: "", nit: "", firma: "", desde: "", hasta: "", encargo: "", tipo: TIPOS_ENCARGO[0], marco: MARCOS[0], fechaInforme: "" },
   empresa: { razonSocial: "", nombreComercial: "", representante: "", actividad: "", ciudad: "", direccion: "", correo: "", telefono: "", rutaOneDrive: "" },
   cronograma: cronogramaVacio(),
   historial: [],
@@ -63,19 +63,38 @@ function diferencias(antes, despues, etiquetas) {
   return Object.keys(despues).filter((k) => (antes[k] || "") !== (despues[k] || "")).map((k) => (etiquetas[k] || k) + ": «" + (antes[k] || "—") + "» → «" + (despues[k] || "—") + "»");
 }
 
-const ETIQ_PROYECTO = { entidad: "Entidad (cliente)", nit: "NIT / ID", desde: "Período desde", hasta: "Período hasta", encargo: "Nombre del encargo", tipo: "Tipo de encargo", marco: "Marco normativo", fechaInforme: "Fecha del informe" };
+const ETIQ_PROYECTO = { entidad: "Entidad (cliente)", nit: "NIT / ID", firma: "Firma de auditoría", desde: "Período desde", hasta: "Período hasta", encargo: "Nombre del encargo", tipo: "Tipo de encargo", marco: "Marco normativo", fechaInforme: "Fecha del informe" };
 const ETIQ_EMPRESA = { razonSocial: "Razón social", nombreComercial: "Nombre comercial", representante: "Representante legal", actividad: "Actividad económica", ciudad: "Ciudad", direccion: "Dirección", correo: "Correo de contacto", telefono: "Teléfono", rutaOneDrive: "Carpeta OneDrive" };
 
 async function guardarProyecto(nuevo, { por } = {}) {
   const sin = permiso(por);
   if (sin) return { ok: false, error: sin };
-  const p = { ...datos.proyecto, ...nuevo };
+  const { corte1, corte2, ...resto } = nuevo;
+  const p = { ...datos.proyecto, ...resto };
   Object.keys(p).forEach((k) => (p[k] = String(p[k] == null ? "" : p[k]).trim()));
+  const clave = (id) => datos.cronograma.fechasClave.find((x) => x.id === id) || {};
+  const c1 = corte1 === undefined ? (clave("planificacion").aplica ? clave("planificacion").fecha || "" : "") : String(corte1 || "").trim();
+  const c2 = corte2 === undefined ? (clave("precierre").aplica ? clave("precierre").fecha || "" : "") : String(corte2 || "").trim();
   if (!p.entidad) return { ok: false, error: "Escriba la entidad (cliente)." };
-  if (p.desde && p.hasta && p.hasta < p.desde) return { ok: false, error: "El período «hasta» no puede ser anterior al «desde»." };
-  if (p.fechaInforme && p.hasta && p.fechaInforme < p.hasta) return { ok: false, error: "La fecha del informe no puede ser anterior al cierre del período." };
-  anotar("Información del proyecto", diferencias(datos.proyecto, p, ETIQ_PROYECTO), por);
+  /* Igual que el VBA: el inicio del período y el corte final son obligatorios; los cortes 1 y 2 son opcionales. */
+  if (!p.desde) return { ok: false, error: "Escriba la fecha de inicio del período de auditoría." };
+  if (!p.hasta) return { ok: false, error: "Escriba el corte final (hasta): es la fecha de cierre del período." };
+  const orden = [["Inicio del período", p.desde], ["Corte 1", c1], ["Corte 2", c2], ["Corte final", p.hasta]].filter((x) => x[1]);
+  for (let i = 1; i < orden.length; i++) if (orden[i][1] < orden[i - 1][1]) return { ok: false, error: "«" + orden[i][0] + "» no puede ser anterior a «" + orden[i - 1][0] + "»." };
+  if (p.fechaInforme && p.fechaInforme < p.hasta) return { ok: false, error: "La fecha del informe no puede ser anterior al cierre del período." };
+  const cambios = diferencias(datos.proyecto, p, ETIQ_PROYECTO);
+  /* Los cortes son las fechas clave del cronograma: se guardan juntos para que no se desajusten. */
+  const nuevas = datos.cronograma.fechasClave.map((x) => {
+    const f = x.id === "planificacion" ? c1 : x.id === "precierre" ? c2 : x.id === "cierre" ? p.hasta : null;
+    return f === null ? x : { ...x, fecha: f, aplica: x.id === "cierre" ? true : !!f };
+  });
+  datos.cronograma.fechasClave.forEach((x) => {
+    const n = nuevas.find((y) => y.id === x.id);
+    if (x.id !== "cierre" && ((x.fecha || "") !== (n.fecha || "") || !!x.aplica !== !!n.aplica)) cambios.push(x.etiqueta + ": " + (n.aplica ? n.fecha : "no aplica"));
+  });
+  anotar("Información del proyecto", cambios, por);
   datos.proyecto = p;
+  datos.cronograma.fechasClave = nuevas;
   await persistir();
   document.dispatchEvent(new CustomEvent("auditx:proyecto-cambio", { detail: { seccion: "proyecto" } }));
   return { ok: true };
@@ -97,7 +116,7 @@ async function guardarEmpresa(nuevo, { por } = {}) {
 /* Lo que llevan en el encabezado todos los papeles: entidad, NIT y período. */
 function encabezado() {
   const p = datos.proyecto;
-  return { entidad: p.entidad, nit: p.nit, desde: p.desde, hasta: p.hasta };
+  return { entidad: p.entidad, nit: p.nit, firma: p.firma, desde: p.desde, hasta: p.hasta };
 }
 
 
@@ -135,7 +154,9 @@ async function guardarFechasClave(lista, { por } = {}) {
     .filter((n) => { const o = antes.find((x) => x.id === n.id) || {}; return (o.fecha || "") !== (n.fecha || "") || !!o.aplica !== !!n.aplica; })
     .map((n) => n.etiqueta + ": " + (n.aplica ? n.fecha || "sin fecha" : "no aplica"));
   anotar("Cronograma", cambios, por);
-  datos.cronograma.fechasClave = lista.map((n) => ({ id: n.id, etiqueta: n.etiqueta, fecha: n.fecha || "", aplica: !!n.aplica }));
+  datos.cronograma.fechasClave = lista.map((n) => ({ id: n.id, etiqueta: n.etiqueta, fecha: n.fecha || "", aplica: n.id === "cierre" ? true : !!n.aplica }));
+  const cierre = datos.cronograma.fechasClave.find((x) => x.id === "cierre");
+  if (cierre && cierre.fecha) datos.proyecto.hasta = cierre.fecha; // el corte final es el cierre del período
   await persistir();
   document.dispatchEvent(new CustomEvent("auditx:proyecto-cambio", { detail: { seccion: "cronograma" } }));
   return { ok: true };
@@ -190,6 +211,12 @@ async function iniciar() {
   datos.historial = datos.historial || [];
   const cr = cronogramaVacio();
   datos.cronograma = { fechasClave: (datos.cronograma && datos.cronograma.fechasClave) || cr.fechasClave, eventos: (datos.cronograma && datos.cronograma.eventos) || [] };
+  const ci = datos.cronograma.fechasClave.find((x) => x.id === "cierre");
+  if (ci) {
+    ci.aplica = true;
+    if (datos.proyecto.hasta) ci.fecha = datos.proyecto.hasta;
+    else if (ci.fecha) datos.proyecto.hasta = ci.fecha;
+  }
   return api;
 }
 
