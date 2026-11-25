@@ -81,6 +81,11 @@ function montar(modoDoc) {
       c.append(h, selectorUsuario());
       const yo = flujo.usuarioActual();
       if (!modoDoc) c.append(configuracion(yo));
+      else {
+        const puedeDoc = flujo.puede(yo.id, "documentar-alertas");
+        c.append(el("p", "fm-ayuda", "Aquí se documenta y registra la respuesta a cada alerta. Solo pueden hacerlo los perfiles socio, gerente, auditor independiente o senior, y únicamente sobre las alertas dirigidas a ellos o, si supervisan, a cualquiera."));
+        if (!puedeDoc) c.append(mensaje("Su perfil no tiene permiso para documentar y registrar alertas; puede consultarlas.", "aviso"));
+      }
 
       const barra = el("div", "es-fila2");
       const e = campo({ id: "al-estado", etiqueta: "Estado", tipo: "select", opciones: ["Todas", "Abierta", "Atendida"], valor: filtros.estado || "Todas" });
@@ -154,6 +159,16 @@ function montar(modoDoc) {
         });
       }
       lista();
+      if (modoDoc) {
+        const hist = alertas.historialConfig();
+        if (hist.length) {
+          const sec = el("section", "fl-hist");
+          sec.dataset.seccion = "bitacora-config";
+          sec.append(el("h3", null, "Cambios en la configuración de alertas"));
+          hist.slice(0, 10).forEach((x) => sec.append(el("div", "fl-hist-nota", fmtFecha(x.fecha) + " · " + x.por.nombre + ": " + x.alerta + " → " + (x.estado ? "activada" : "desactivada"))));
+          c.append(sec);
+        }
+      }
     };
 
     const formulario = (a, yo) => {
