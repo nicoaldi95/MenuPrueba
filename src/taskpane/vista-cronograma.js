@@ -152,6 +152,11 @@ export function montarCronograma(c) {
     });
     c.append(sec);
     c.append(el("p", "fm-ayuda", "Los vencimientos de los papeles se toman de la ficha de cada papel. La sincronización con el calendario de Teams y Outlook queda para una fase posterior."));
+    const enlace = el("a", "fm-ayuda", "Ver la herramienta BA-12 (tiempo invertido y cronograma) en Auditool");
+    enlace.href = "https://www.auditool.org/auditoria-externa/planificacion-auditoria/ba-12-herramienta-de-tiempo-invertido-y-cronograma-de-actividades";
+    enlace.target = "_blank";
+    enlace.rel = "noopener noreferrer";
+    c.append(enlace);
   };
 
   const formularioEvento = (yo) => {
