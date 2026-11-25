@@ -15,12 +15,29 @@
 import { crearAlmacen } from "./almacen.js";
 import flujo, { ESTADO, hoyISO } from "./flujo.js";
 import proyecto from "./proyecto.js";
+import tareas from "./tareas.js";
 
 /* global window, document */
 
 export const Almacen = crearAlmacen({ namespace: "http://auditool.org/auditx/alertas/v1", claveLocal: "auditx.alertas.v1", raiz: "alertas" });
 
-export const TIPOS = ["Vencimiento", "Devuelto", "Cambio relevante", "Cronograma", "Comentario"];
+export const TIPOS = ["Vencimiento", "Devuelto", "Cambio relevante", "Cronograma", "Comentario", "Tareas"];
+
+/*
+ * Las 7 alertas que se podían encender o apagar en «Listado de Alertas» del VBA (celdas K334–K340 de «Hoja Control»).
+ * conexion: "activa"    ya genera alertas en el complemento
+ *           "cubierta"  el complemento ya lo exige de forma más estricta (no se puede firmar con comentarios abiertos)
+ *           "pendiente" se conecta cuando se migre el módulo que la origina («modulo»); la preferencia ya queda guardada
+ */
+export const ALERTAS_CONFIGURABLES = [
+  { id: "atipicos", celda: "K334", etiqueta: "¿Valores atípicos en la revisión analítica?", conexion: "pendiente", modulo: "Revisión analítica", predeterminada: false },
+  { id: "materialidad", celda: "K335", etiqueta: "¿Se cambió la base sobre la cual se calcula la materialidad?", conexion: "pendiente", modulo: "Materialidad", predeterminada: false },
+  { id: "riesgos", celda: "K336", etiqueta: "¿Hay riesgos significativos?", conexion: "pendiente", modulo: "Evaluación de riesgos", predeterminada: false },
+  { id: "comentarios-abiertos", celda: "K337", etiqueta: "¿Comentarios del PT sin cerrarse?", conexion: "cubierta", predeterminada: true },
+  { id: "ajustes", celda: "K338", etiqueta: "¿Los ajustes y/o reclasificaciones son materiales?", conexion: "pendiente", modulo: "Ajustes y reclasificaciones", predeterminada: false },
+  { id: "comentario-pendiente", celda: "K339", etiqueta: "Comentario pendiente por responder", conexion: "activa", predeterminada: true },
+  { id: "tareas-completadas", celda: "K340", etiqueta: "¿Eliminar tareas completadas al 100%?", conexion: "activa", predeterminada: false },
+];
 export const RESPUESTAS = ["Atendida", "Justificada", "No procede"];
 const DIAS_PREVIOS_PAPEL = 3;
 const DIAS_PREVIOS_EVENTO = 7;
@@ -35,6 +52,12 @@ async function persistir() {
   cola = cola.then(() => Almacen.guardar(instantanea));
   return cola;
 }
+
+function configActual() {
+  const f = (datos && datos.config && datos.config.flags) || {};
+  return ALERTAS_CONFIGURABLES.map((x) => ({ ...x, activa: x.id in f ? !!f[x.id] : x.predeterminada }));
+}
+const estaActiva = (id) => (configActual().find((x) => x.id === id) || {}).activa;
 
 const sumarDias = (iso, n) => {
   const [a, m, d] = iso.split("-").map(Number);
@@ -90,6 +113,13 @@ async function revisar() {
     const dias = diasHasta(x.fecha);
     if (dias >= 0 && dias <= DIAS_PREVIOS_EVENTO) cambio = agregar({ clave: "crono:" + x.titulo + ":" + x.fecha, tipo: "Cronograma", para: quienes, descripcion: x.titulo + " es " + (dias === 0 ? "hoy" : "en " + dias + (dias === 1 ? " día" : " días")) + " (" + x.fecha + ")." }) || cambio;
   });
+  if (estaActiva("tareas-completadas")) {
+    const mes = hoyISO().slice(0, 7);
+    flujo.personas(true).forEach((p) => {
+      const n = tareas.retirables(p.id, false);
+      if (n) cambio = agregar({ clave: "tareas:" + p.id + ":" + mes, tipo: "Tareas", para: [p.id], descripcion: "Hay " + n + " tarea(s) completada(s) al 100 % hace " + tareas.DIAS_PARA_RETIRAR + " días o más. ¿Desea retirarlas del registro? (en «Consultar y Responder Tareas»)" }) || cambio;
+    });
+  }
   if (cambio) await persistir();
   pintarPanel();
   return cambio;
@@ -119,7 +149,7 @@ async function alCambiarComentario(e) {
   const { tipo, comentario: c } = e.detail;
   const clave = "com:" + c.id;
   let cambio = false;
-  if (tipo === "nuevo") {
+  if (tipo === "nuevo" && estaActiva("comentario-pendiente")) {
     cambio = agregar({ clave, tipo: "Comentario", papel: c.papel === "General" ? "" : c.papel, para: [c.para.id], descripcion: c.de.nombre + " le dejó un comentario" + (c.papel === "General" ? "" : " en " + c.papel) + ": «" + c.texto + "»" });
   } else if (tipo === "cerrado") {
     const a = datos.alertas.find((x) => x.clave === clave && x.estado === "Abierta");
@@ -175,11 +205,32 @@ async function responder(id, { respuesta, comentarios }, { por } = {}) {
   return { ok: true, alerta: copia(a) };
 }
 
+const COLA_MAX = 50;
+/* Enciende o apaga alertas. «cambios»: { idAlerta: true|false }. Solo quien aprueba (administra) puede hacerlo. */
+async function guardarConfig(cambios, { por } = {}) {
+  if (!flujo.puedeAdministrar(por)) return { ok: false, error: "Solo quien aprueba puede activar o desactivar las alertas." };
+  const antes = configActual();
+  const cambiados = antes.filter((x) => x.id in (cambios || {}) && !!cambios[x.id] !== x.activa);
+  if (!cambiados.length) return { ok: false, error: "No hay cambios por guardar." };
+  datos.config = datos.config || { flags: {}, historial: [] };
+  const quien = flujo.persona(por);
+  cambiados.forEach((x) => {
+    datos.config.flags[x.id] = !!cambios[x.id];
+    datos.config.historial.push({ fecha: new Date().toISOString(), por: quien ? { id: quien.id, nombre: quien.nombre, cargo: quien.cargo } : { id: por, nombre: "Desconocido", cargo: "" }, alerta: x.etiqueta, estado: !!cambios[x.id] });
+  });
+  if (datos.config.historial.length > COLA_MAX) datos.config.historial = datos.config.historial.slice(-COLA_MAX);
+  await persistir();
+  await revisar();
+  return { ok: true, cambiados: cambiados.length };
+}
+
 async function iniciar() {
   datos = (await Almacen.cargar()) || { version: 1, alertas: [], actualizado: "" };
   datos.alertas = datos.alertas || [];
+  datos.config = datos.config || { flags: {}, historial: [] };
   document.addEventListener("auditx:flujo-cambio", alCambiarFlujo);
   document.addEventListener("auditx:comentarios-cambio", alCambiarComentario);
+  document.addEventListener("auditx:tareas-cambio", () => estaActiva("tareas-completadas") && revisar());
   document.addEventListener("auditx:proyecto-cambio", (e) => e.detail && e.detail.seccion === "cronograma" && revisar());
   await revisar();
   return api;
@@ -190,6 +241,10 @@ const api = {
   TIPOS,
   RESPUESTAS,
   revisar,
+  config: configActual,
+  guardarConfig,
+  historialConfig: () => copia((datos.config && datos.config.historial) || []).reverse(),
+  ALERTAS_CONFIGURABLES,
   listar,
   responder,
   puedeDocumentar,
@@ -197,7 +252,7 @@ const api = {
   total: () => datos.alertas.length,
   diasHasta,
   _reiniciar: async () => {
-    datos = { version: 1, alertas: [], actualizado: "" };
+    datos = { version: 1, alertas: [], config: { flags: {}, historial: [] }, actualizado: "" };
     await persistir();
     pintarPanel();
   },

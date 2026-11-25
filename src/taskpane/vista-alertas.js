@@ -4,11 +4,67 @@
  *   alertas-doc    Documentación de Alertas (abiertas que le corresponden, listas para responder)
  */
 
-/* global window */
+/* global window, document */
 
 import flujo from "./flujo.js";
 import alertas, { TIPOS, RESPUESTAS } from "./alertas.js";
 import { el, campo, mensaje, selectorUsuario, enCambios, fmtFecha } from "./ui.js";
+
+
+const ESTADO_CONEXION = {
+  activa: "",
+  cubierta: "Ya cubierta: el complemento no deja firmar un papel con comentarios abiertos.",
+};
+
+let avisoCfg = null; // se conserva aunque la lista se vuelva a dibujar al guardar
+
+function configuracion(yo) {
+  const sec = el("section", "fl-hist");
+  sec.dataset.seccion = "config-alertas";
+  sec.append(el("h3", null, "Configurar alertas"));
+  const puede = flujo.puedeAdministrar(yo.id);
+  sec.append(el("p", "fm-ayuda", puede ? "Elija qué alertas del encargo están activadas. Los cambios quedan registrados." : "Así están configuradas las alertas del encargo. Solo quien aprueba puede cambiarlas."));
+  const marcas = {};
+  alertas.config().forEach((x) => {
+    const f = el("fieldset", "fm-grupo");
+    f.dataset.alerta = x.id;
+    f.append(el("legend", null, x.etiqueta + " (" + x.celda + ")"));
+    [["si", "Activada", true], ["no", "Desactivada", false]].forEach(([v, t, val]) => {
+      const l = el("label", "fm-check");
+      const r = el("input");
+      r.type = "radio";
+      r.name = "cfg-" + x.id;
+      r.value = v;
+      r.checked = x.activa === val;
+      r.disabled = !puede;
+      r.dataset.campo = "cfg-" + x.id + "-" + v;
+      r.addEventListener("change", () => (marcas[x.id] = val));
+      l.append(r, el("span", null, t));
+      f.append(l);
+    });
+    const nota = x.conexion === "pendiente" ? "Su preferencia se guarda; la alerta empezará a avisar cuando esté disponible «" + x.modulo + "»." : ESTADO_CONEXION[x.conexion];
+    if (nota) f.append(el("span", "fm-ayuda", nota));
+    sec.append(f);
+  });
+  if (avisoCfg) sec.append(mensaje(avisoCfg.texto, avisoCfg.tipo));
+  if (puede) {
+    const b = el("button", "fl-btn", "Guardar configuración");
+    b.type = "button";
+    b.dataset.accion = "guardar-config";
+    b.addEventListener("click", async () => {
+      const r = await alertas.guardarConfig(marcas, { por: yo.id });
+      avisoCfg = { texto: r.ok ? "Se actualizó el estado de las alertas (" + r.cambiados + " cambio(s))." : r.error, tipo: r.ok ? "ok" : "aviso" };
+      document.dispatchEvent(new CustomEvent("auditx:alertas-cambio"));
+    });
+    sec.append(b);
+  }
+  const hist = alertas.historialConfig();
+  if (hist.length) {
+    sec.append(el("p", "fm-ayuda", "Cambios recientes"));
+    hist.slice(0, 5).forEach((x) => sec.append(el("div", "fl-hist-nota", fmtFecha(x.fecha) + " · " + x.por.nombre + ": " + x.alerta + " → " + (x.estado ? "activada" : "desactivada"))));
+  }
+  return sec;
+}
 
 function montar(modoDoc) {
   return (c) => {
@@ -24,6 +80,7 @@ function montar(modoDoc) {
       h.append(el("span", "fl-codigo", "M10-03"), el("span", "fl-nombre", modoDoc ? "Documentación de Alertas" : "Listado de Alertas"));
       c.append(h, selectorUsuario());
       const yo = flujo.usuarioActual();
+      if (!modoDoc) c.append(configuracion(yo));
 
       const barra = el("div", "es-fila2");
       const e = campo({ id: "al-estado", etiqueta: "Estado", tipo: "select", opciones: ["Todas", "Abierta", "Atendida"], valor: filtros.estado || "Todas" });

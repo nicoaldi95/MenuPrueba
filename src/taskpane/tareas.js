@@ -188,4 +188,4 @@ export const retirables = (pid, todas = false) => {
   return datos.tareas.filter((t) => t.estado === "Completado" && diasEntre(t.vencimiento, hoy) >= DIAS_PARA_RETIRAR && (todas || t.asigna === pid)).length;
 };
 
-export default { iniciar, lista, asignadasPor, deUsuario, crear, responder, pendientesDe, porAvisar, marcarAvisadas, retirarCompletadas, retirables, esVencida, PROGRESOS_RESPUESTA, responsables, vencimientoSugerido, sumarDias, PRIORIDADES, ESTADOS, ESTADOS_AL_ASIGNAR, PROGRESOS, PROCESOS, MAX_TAREAS };
+export default { DIAS_PARA_RETIRAR, iniciar, lista, asignadasPor, deUsuario, crear, responder, pendientesDe, porAvisar, marcarAvisadas, retirarCompletadas, retirables, esVencida, PROGRESOS_RESPUESTA, responsables, vencimientoSugerido, sumarDias, PRIORIDADES, ESTADOS, ESTADOS_AL_ASIGNAR, PROGRESOS, PROCESOS, MAX_TAREAS };
