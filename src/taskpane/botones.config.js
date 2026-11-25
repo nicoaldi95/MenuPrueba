@@ -63,8 +63,8 @@ export const PAQUETES = [
         hijos: [
           { tipo: "boton", id: "tareas-asignar", etiqueta: "Asignar Tareas", accion: "flujo", codigo: "M8-02" },
           { tipo: "boton", id: "tareas-consultar", etiqueta: "Consultar y Responder Tareas", accion: "flujo", codigo: "M8-03" },
-          { tipo: "boton", id: "tareas-kanban", etiqueta: "Kanban de Tareas", accion: "pendiente", codigo: "M10-02" },
-          { tipo: "boton", id: "tareas-dashboard", etiqueta: "Dashboard de Tareas", accion: "hoja", hoja: "Dashboard Ej", codigo: "M10-01" },
+          { tipo: "boton", id: "tareas-kanban", etiqueta: "Kanban de Tareas", accion: "flujo", codigo: "M10-02" },
+          { tipo: "boton", id: "tareas-dashboard", etiqueta: "Dashboard de Tareas", accion: "flujo", codigo: "M10-01" },
         ],
       },
       { tipo: "boton", id: "indice", etiqueta: "Índice de papeles de trabajo", accion: "flujo", hoja: "Indice", codigo: "M2-02", previsto: "Jue 12 nov" },
