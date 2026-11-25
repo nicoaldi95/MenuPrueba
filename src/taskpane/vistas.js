@@ -27,6 +27,7 @@ import { montarPapelHoja } from "./vista-hoja.js";
 import { montarEmpresas } from "./vista-empresas.js";
 import { montarTI } from "./vista-ti.js";
 import { montarPersonalizar } from "./vista-nombres.js";
+import { montarLogo } from "./vista-logo.js";
 
 /* global document, window */
 
@@ -449,6 +450,7 @@ export const VISTAS = {
   "info-proyecto": montarInfoProyecto,
   "crear-empresas": montarEmpresas,
   personalizar: montarPersonalizar,
+  logo: montarLogo,
   empresa: montarEmpresa,
   onedrive: montarOneDrive,
   "estatus-firmas": montarEstatus,

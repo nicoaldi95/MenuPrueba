@@ -47,7 +47,7 @@ export const PAQUETES = [
           { tipo: "boton", id: "empresa", etiqueta: "Configurar Empresa", accion: "flujo", codigo: "M2-01", previsto: "Mié 11 nov" },
           { tipo: "boton", id: "onedrive", etiqueta: "Carpeta OneDrive", accion: "flujo", codigo: "M2-01", previsto: "Mié 11 nov" },
           { tipo: "boton", id: "personalizar", etiqueta: "Personalizar Botones", accion: "flujo", codigo: "M1-02", previsto: "Mar 10 nov", permiso: "personalizar-botones" },
-          { tipo: "boton", id: "logo", etiqueta: "Cambiar logo de los papeles de trabajo", accion: "pendiente", codigo: "M1-02" },
+          { tipo: "boton", id: "logo", etiqueta: "Cambiar logo de los papeles de trabajo", accion: "flujo", codigo: "M1-02", previsto: "Mié 26 nov", permiso: "personalizar-botones" },
           { tipo: "boton", id: "actualizar-pt", etiqueta: "Actualizar Información de los Papeles de Trabajo", accion: "pendiente", codigo: "M2-08" },
         ],
       },

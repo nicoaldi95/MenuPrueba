@@ -25,6 +25,7 @@ import hojaTI from "./hoja-ti.js";
 import { montarFicha } from "./flujo-ficha.js";
 import proyecto from "./proyecto.js";
 import nombres from "./nombres.js";
+import logo from "./logo.js";
 import empresas from "./empresas.js";
 import alertas from "./alertas.js";
 import { VISTAS } from "./vistas.js";
@@ -476,6 +477,7 @@ export async function iniciarPanel() {
   window.AuditX.flujo.montarFicha = montarFicha;
   window.AuditX.proyecto = proyecto;
   window.AuditX.nombres = nombres;
+  window.AuditX.logo = logo;
   window.AuditX.empresas = empresas;
   window.AuditX.alertas = alertas;
   window.AuditX.comentarios = comentarios;
@@ -486,6 +488,7 @@ export async function iniciarPanel() {
     await flujo.iniciar();
     await proyecto.iniciar();
     await nombres.iniciar();
+    await logo.iniciar();
     refrescarMenu();
     await empresas.iniciar();
     await comentarios.iniciar();
