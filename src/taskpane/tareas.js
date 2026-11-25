@@ -42,7 +42,13 @@ export async function iniciar() {
   datos = { tareas: g && Array.isArray(g.tareas) ? g.tareas : [] };
 }
 
-const esFecha = (s) => /^\d{4}-\d{2}-\d{2}$/.test(s || "") && !isNaN(new Date(s + "T00:00:00").getTime()) && new Date(s + "T00:00:00").toISOString().slice(0, 10) === s;
+const esFecha = (s) => {
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(s || "");
+  if (!m) return false;
+  const [a, mes, d] = [Number(m[1]), Number(m[2]), Number(m[3])];
+  const f = new Date(a, mes - 1, d);
+  return f.getFullYear() === a && f.getMonth() === mes - 1 && f.getDate() === d;
+};
 export function sumarDias(iso, n) {
   const [a, m, d] = iso.split("-").map(Number);
   return flujo.hoyISO(new Date(a, m - 1, d + n));

@@ -76,7 +76,7 @@ export const PAQUETES = [
           { tipo: "boton", id: "alertas-doc", etiqueta: "Documentación de Alertas", accion: "flujo", hoja: "Listado Alertas", codigo: "M10-03", previsto: "Vie 13 nov" },
         ],
       },
-      { tipo: "boton", id: "comunicaciones", etiqueta: "Registro de comunicaciones", accion: "hoja", hoja: "Registro Comunicaciones", codigo: "M2-11 (propuesto)" },
+      { tipo: "boton", id: "comunicaciones", etiqueta: "Registro de comunicaciones", accion: "flujo", codigo: "M2-11 (propuesto)" },
       {
         tipo: "menu", id: "menu58", etiqueta: "Status PT y control de firmas",
         hijos: [

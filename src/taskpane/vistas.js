@@ -31,6 +31,7 @@ import { montarLogo } from "./vista-logo.js";
 import { montarAsignarTareas } from "./vista-tareas-asignar.js";
 import { montarConsultarTareas } from "./vista-tareas-consultar.js";
 import { montarKanban } from "./vista-tareas-kanban.js";
+import { montarComunicaciones } from "./vista-comunicaciones.js";
 import { montarDashboardTareas } from "./vista-tareas-dashboard.js";
 import { montarActualizarPT } from "./vista-actualizar-pt.js";
 
@@ -459,6 +460,7 @@ export const VISTAS = {
   "tareas-asignar": montarAsignarTareas,
   "tareas-consultar": montarConsultarTareas,
   "tareas-kanban": montarKanban,
+  comunicaciones: montarComunicaciones,
   "tareas-dashboard": montarDashboardTareas,
   "actualizar-pt": montarActualizarPT,
   empresa: montarEmpresa,
