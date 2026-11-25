@@ -29,10 +29,10 @@ export const REGLAS = {
 
 /* Personas de ejemplo. Se reemplazan por usuarios de Microsoft 365 cuando se conecte el inicio de sesión. */
 export const PERSONAS = [
-  { id: "p-laura", nombre: "Laura Gómez", cargo: "Auditor junior", roles: ["prepara"], perfil: "asistente" },
-  { id: "p-andres", nombre: "Andrés Rojas", cargo: "Auditor senior", roles: ["prepara", "revisa"], perfil: "senior" },
-  { id: "p-marcela", nombre: "Marcela Díaz", cargo: "Gerente de auditoría", roles: ["revisa", "supervisa"], perfil: "gerente" },
-  { id: "p-carlos", nombre: "Carlos Mejía", cargo: "Socio", roles: ["revisa", "supervisa", "aprueba"], perfil: "socio" },
+  { id: "p-laura", correo: "laura.gomez@ejemplo.com", nombre: "Laura Gómez", cargo: "Auditor junior", roles: ["prepara"], perfil: "asistente" },
+  { id: "p-andres", correo: "andres.rojas@ejemplo.com", nombre: "Andrés Rojas", cargo: "Auditor senior", roles: ["prepara", "revisa"], perfil: "senior" },
+  { id: "p-marcela", correo: "marcela.diaz@ejemplo.com", nombre: "Marcela Díaz", cargo: "Gerente de auditoría", roles: ["revisa", "supervisa"], perfil: "gerente" },
+  { id: "p-carlos", correo: "carlos.mejia@ejemplo.com", nombre: "Carlos Mejía", cargo: "Socio", roles: ["revisa", "supervisa", "aprueba"], perfil: "socio" },
 ];
 
 export const ALMACEN = {

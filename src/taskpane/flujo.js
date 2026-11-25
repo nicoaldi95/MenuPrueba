@@ -424,9 +424,12 @@ async function guardarPersona(x, { por } = {}) {
   const nombre = String(x.nombre || "").trim();
   if (!nombre) return { ok: false, error: "Escriba el nombre." };
   if (!x.roles || !x.roles.length) return { ok: false, error: "Elija al menos un rol." };
-  if (x.correo && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(x.correo)) return { ok: false, error: "El correo no es válido." };
+  const correo = String(x.correo || "").trim().toLowerCase();
+  if (!correo) return { ok: false, error: "Escriba el correo: es la cuenta con la que la persona ingresa." };
+  if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(correo)) return { ok: false, error: "El correo no es válido." };
+  if ((datos.personas || []).some((y) => y.id !== x.id && String(y.correo || "").toLowerCase() === correo)) return { ok: false, error: "Ese correo ya pertenece a otro usuario." };
   if ((datos.personas || []).some((y) => y.id !== x.id && y.nombre.toLowerCase() === nombre.toLowerCase())) return { ok: false, error: "Ya existe un usuario con ese nombre." };
-  const limpio = { id: x.id || "p-" + Date.now().toString(36), nombre, cargo: String(x.cargo || "").trim(), correo: String(x.correo || "").trim(), roles: x.roles.slice(), perfil: x.perfil || (persona(x.id) || {}).perfil || perfilDesdeRoles(x.roles), activo: x.activo !== false };
+  const limpio = { id: x.id || "p-" + Date.now().toString(36), nombre, cargo: String(x.cargo || "").trim(), correo, roles: x.roles.slice(), perfil: x.perfil || (persona(x.id) || {}).perfil || perfilDesdeRoles(x.roles), activo: x.activo !== false };
   const i = datos.personas.findIndex((y) => y.id === limpio.id);
   if (i >= 0) {
     // quitar un rol a quien ya lo ejerce en un papel abierto dejaría el papel trabado

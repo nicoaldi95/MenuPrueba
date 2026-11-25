@@ -113,10 +113,11 @@ export function montarUsuarios(c) {
     flujo.ACCIONES.forEach((a, i) => {
       const tr = el("tr");
       tr.append(el("td", null, a.nombre));
-      flujo.matriz().forEach((m) => tr.append(el("td", m.permisos[i].tiene ? "si" : "no", m.permisos[i].tiene ? "✓" : "—")));
+      flujo.matriz().forEach((m) => tr.append(el("td", m.permisos[i].noAplica ? "no" : m.permisos[i].tiene ? "si" : "no", m.permisos[i].noAplica ? "N/A" : m.permisos[i].tiene ? "✓" : "—")));
       tabla.append(tr);
     });
     mt.append(tabla);
+    mt.append(el("p", "fm-ayuda", "N/A: AuditX no guarda contraseñas. El ingreso lo da la cuenta de Microsoft 365 de cada persona."));
     c.append(mt);
 
     /* --- lista --- */
@@ -138,7 +139,7 @@ export function montarUsuarios(c) {
       t.dataset.persona = p.id;
       if (!p.activo) t.classList.add("is-inactiva");
       const l1 = el("div", "fm-tarjeta-t");
-      l1.append(el("strong", null, p.nombre), el("span", "fl-estado", p.activo ? "Activo" : "Desactivado"));
+      l1.append(el("strong", null, p.nombre + (p.id === yo.id ? " (usted)" : "")), el("span", "fl-estado", p.activo ? "Activo" : "Desactivado"));
       t.append(l1, el("div", "fl-hist-l2", [p.cargo, p.correo].filter(Boolean).join(" · ")));
       const chips = el("div", "fm-chips");
       chips.append(el("span", "fm-chip fm-chip-perfil", flujo.nombrePerfil(p.perfil)));
@@ -159,13 +160,13 @@ export function montarUsuarios(c) {
           aviso = null;
           pintar();
         }).dataset.accion = "editar";
-        if (pHabilitar) b(p.activo ? "Desactivar" : "Activar", async () => {
+        if (pHabilitar && p.id !== yo.id) b(p.activo ? "Desactivar" : "Activar", async () => {
           const res = await flujo.activarPersona(p.id, !p.activo, { por: yo.id });
           aviso = res.ok ? null : { texto: res.error, tipo: "error" };
           pintar();
         }).dataset.accion = "activar";
-        if (!pEliminar) {
-          /* sin permiso */
+        if (!pEliminar || p.id === yo.id) {
+          /* sin permiso, o es usted mismo */
         } else if (confirmar === p.id) {
           b("Confirmar eliminación", async () => {
             const res = await flujo.eliminarPersona(p.id, { por: yo.id });
@@ -190,7 +191,7 @@ export function montarUsuarios(c) {
     f.append(el("strong", null, p.id ? "Editar usuario" : "Nuevo usuario"));
     const nombre = campo({ id: "nombre", etiqueta: "Nombre", valor: p.nombre, requerido: true });
     const cargo = campo({ id: "cargo", etiqueta: "Cargo", valor: p.cargo });
-    const correo = campo({ id: "correo", etiqueta: "Correo", valor: p.correo });
+    const correo = campo({ id: "correo", etiqueta: "Correo (cuenta de ingreso)", valor: p.correo, requerido: true });
     const perfil = campo({ id: "perfil", etiqueta: "Perfil", tipo: "select", opciones: flujo.PERFILES.map((x) => x.nombre), valor: flujo.nombrePerfil(p.perfil || "asistente") });
     f.append(nombre.nodo, cargo.nodo, correo.nodo, perfil.nodo);
     const grupo = el("fieldset", "fm-grupo");

@@ -17,7 +17,8 @@ export const ACCIONES = [
   { id: "crear-usuario", nombre: "Crear usuario" },
   { id: "ver-usuarios", nombre: "Ver/consultar usuarios" },
   { id: "eliminar-usuario", nombre: "Eliminar usuario" },
-  { id: "cambiar-clave", nombre: "Cambiar contraseña de otro usuario" },
+  /* No aplica: el acceso lo da la cuenta de Microsoft 365; AuditX no guarda contraseñas. */
+  { id: "cambiar-clave", nombre: "Cambiar contraseña de otro usuario", noAplica: true },
   { id: "habilitar-usuario", nombre: "Habilitar/deshabilitar usuario" },
   { id: "firma-digital", nombre: "Cargar firma digital" },
   { id: "modificar-perfiles", nombre: "Modificar perfiles y niveles de firma" },
@@ -42,8 +43,8 @@ const MATRIZ = {
 
 export const PERFIL_POR_DEFECTO = "asistente";
 
-export const puedePerfil = (perfil, accion) => !!MATRIZ[accion] && MATRIZ[accion].includes(perfil);
-export const matriz = () => PERFILES.map((p) => ({ ...p, permisos: ACCIONES.map((a) => ({ accion: a.id, tiene: puedePerfil(p.id, a.id) })) }));
+export const puedePerfil = (perfil, accion) => !!MATRIZ[accion] && MATRIZ[accion].includes(perfil) && !(ACCIONES.find((a) => a.id === accion) || {}).noAplica;
+export const matriz = () => PERFILES.map((p) => ({ ...p, permisos: ACCIONES.map((a) => ({ accion: a.id, tiene: puedePerfil(p.id, a.id), noAplica: !!a.noAplica })) }));
 export const nombrePerfil = (id) => (PERFILES.find((p) => p.id === id) || {}).nombre || id;
 
 /* Para datos guardados antes de existir el perfil: se deduce de los roles del flujo. */
