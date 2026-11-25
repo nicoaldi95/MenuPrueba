@@ -638,35 +638,35 @@ export const CATALOGO = [
 "nombre": "Entendimiento Ciclo Contable",
 "seccion": "Controles",
 "ruta": "Botón Entendimiento Ciclo Contable",
-"hoja": ""
+"hoja": "C-01 Entend. Ciclo Contable"
 },
 {
 "codigo": "Identificación de Riesgos y Controles",
 "nombre": "Identificación de Riesgos y Controles",
 "seccion": "Controles",
 "ruta": "Botón Identificación de Riesgos y Controles",
-"hoja": ""
+"hoja": "C-02 Ident. Riesgos y controles"
 },
 {
 "codigo": "Prueba",
 "nombre": "Prueba de Diseño",
 "seccion": "Controles",
 "ruta": "Botón Prueba de Diseño",
-"hoja": ""
+"hoja": "C-03 Prueba de diseño"
 },
 {
 "codigo": "Prueba",
 "nombre": "Prueba de Eficacia",
 "seccion": "Controles",
 "ruta": "Botón Prueba de Eficacia",
-"hoja": ""
+"hoja": "C-04 Prueba de eficacia"
 },
 {
 "codigo": "Valoración y Matrices",
 "nombre": "Valoración y Matrices",
 "seccion": "Controles",
 "ruta": "Botón Valoración y Matrices",
-"hoja": ""
+"hoja": "C-05 Valoración y matrices"
 },
 {
 "codigo": "DA",
@@ -799,7 +799,7 @@ export const CATALOGO = [
 "nombre": "Documentación de Muestreos",
 "seccion": "Sustantivas",
 "ruta": "Botón Documentación de Muestreos",
-"hoja": ""
+"hoja": "Documentación Muestreos"
 },
 {
 "codigo": "P-AJ-PC",
@@ -1212,7 +1212,7 @@ export const CATALOGO = [
 "nombre": "DL-03 Contingencias de pasivos, provisiones y contingencias",
 "seccion": "Sustantivas",
 "ruta": "Botón PT Pruebas Sustantivas - Proveedores y cuentas por pagar - Pasivos, provisiones y contingencias",
-"hoja": ""
+"hoja": "DL-03 Contingencias"
 },
 {
 "codigo": "DL-04",
@@ -1492,35 +1492,35 @@ export const CATALOGO = [
 "nombre": "DV-01 otros",
 "seccion": "Sustantivas",
 "ruta": "Botón PT Pruebas Sustantivas - Otros",
-"hoja": ""
+"hoja": "DV 01"
 },
 {
 "codigo": "DV-02",
 "nombre": "DV-02 otros",
 "seccion": "Sustantivas",
 "ruta": "Botón PT Pruebas Sustantivas - Otros",
-"hoja": ""
+"hoja": "DV 02"
 },
 {
 "codigo": "DV-03",
 "nombre": "DV-03 otros",
 "seccion": "Sustantivas",
 "ruta": "Botón PT Pruebas Sustantivas - Otros",
-"hoja": ""
+"hoja": "DV 03"
 },
 {
 "codigo": "DV-04",
 "nombre": "DV-04 otros",
 "seccion": "Sustantivas",
 "ruta": "Botón PT Pruebas Sustantivas - Otros",
-"hoja": ""
+"hoja": "DV 04"
 },
 {
 "codigo": "DV-05",
 "nombre": "DV-05 otros",
 "seccion": "Sustantivas",
 "ruta": "Botón PT Pruebas Sustantivas - Otros",
-"hoja": ""
+"hoja": "DV 05"
 },
 {
 "codigo": "Sum",
@@ -1751,21 +1751,21 @@ export const CATALOGO = [
 "nombre": "P-AZ-P Hallazgos y recomendaciones Planificación",
 "seccion": "Informes",
 "ruta": "Botón Hallazgos - Planillas de Hallazgos y Recomendaciones Constructivas",
-"hoja": ""
+"hoja": "P-AZ - Hallazgos Planif"
 },
 {
 "codigo": "P-AZ-PC",
 "nombre": "P-AZ-PC Hallazgos y recomendaciones Precierre",
 "seccion": "Informes",
 "ruta": "Botón Hallazgos - Planillas de Hallazgos y Recomendaciones Constructivas",
-"hoja": ""
+"hoja": "P-AZ - Hallazgos Precierre"
 },
 {
 "codigo": "P-AZ-C",
 "nombre": "P-AZ-C Hallazgos y recomendaciones Cierre",
 "seccion": "Informes",
 "ruta": "Botón Hallazgos - Planillas de Hallazgos y Recomendaciones Constructivas",
-"hoja": ""
+"hoja": "P-AZ - Hallazgos Cierre"
 },
 {
 "codigo": "Dashboard Hallazgos",

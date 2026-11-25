@@ -10,7 +10,9 @@ import alertas from "./alertas.js";
 import { resumen, montarPendientes } from "./vista-estatus.js";
 import { montarAlertas } from "./vista-alertas.js";
 import { montarCronograma } from "./vista-cronograma.js";
+import tareas from "./tareas.js";
 import { el, selectorUsuario, enCambios } from "./ui.js";
+import { montarDashboardTareas } from "./vista-tareas-dashboard.js";
 
 /* global window */
 
@@ -43,6 +45,50 @@ export function montarDashboard(c) {
       kp.append(k);
     });
     c.append(kp);
+
+    /* --- estatus de los papeles (preparados, revisados, supervisados, aprobados) --- */
+    const est = el("section", "fl-hist");
+    est.dataset.seccion = "estatus-papeles";
+    est.append(el("h3", null, "Estatus de los papeles de trabajo"));
+    flujo.rolesActivos().forEach((rol) => {
+      const n = r.filas.reduce((a, f) => a + (f[rol.id] || 0), 0);
+      const f = el("div", "es-rol db-estado");
+      f.dataset.rol = rol.id;
+      f.append(el("span", "es-rol-t", { prepara: "Preparados", revisa: "Revisados", supervisa: "Supervisados", aprueba: "Aprobados" }[rol.id] || rol.nombre), el("strong", null, n + " de " + r.total));
+      est.append(f);
+    });
+    c.append(est);
+
+    /* --- equipo --- */
+    const equipo = flujo.personas(true);
+    const eq = el("section", "fl-hist");
+    eq.dataset.seccion = "equipo";
+    eq.append(el("h3", null, "Equipo (" + equipo.length + ")"));
+    equipo.forEach((x) => {
+      const f = el("div", "es-rol db-estado");
+      f.append(el("span", "es-rol-t", x.nombre), el("span", null, flujo.nombrePerfil(x.perfil)));
+      eq.append(f);
+    });
+    c.append(eq);
+
+    /* --- tareas por estado --- */
+    const ts = tareas.lista();
+    const tr = el("section", "fl-hist");
+    tr.dataset.seccion = "tareas";
+    tr.append(el("h3", null, "Tareas por estado (" + ts.length + ")"));
+    if (!ts.length) tr.append(el("p", "fl-vacio", "Aún no hay tareas registradas."));
+    else
+      tareas.ESTADOS.forEach((e) => {
+        const f = el("div", "es-rol db-estado");
+        f.append(el("span", "es-rol-t", e), el("strong", null, String(ts.filter((t) => t.estado === e).length)));
+        tr.append(f);
+      });
+    const verT = el("button", "fl-btn fl-btn-sec", "Ver dashboard de tareas");
+    verT.type = "button";
+    verT.dataset.accion = "ver-tareas";
+    verT.addEventListener("click", () => window.AuditX.panel.abrirVista("tareas-dashboard", montarDashboardTareas, { apilar: true }));
+    tr.append(verT);
+    c.append(tr);
 
     /* --- avance por fase --- */
     const fases = el("section", "fl-hist");
@@ -120,7 +166,7 @@ export function montarDashboard(c) {
     al.append(verA);
     c.append(al);
   };
-  const h = enCambios(c, pintar, ["auditx:flujo-usuario", "auditx:flujo-config", "auditx:flujo-cambio", "auditx:alertas-cambio", "auditx:proyecto-cambio"]);
+  const h = enCambios(c, pintar, ["auditx:flujo-usuario", "auditx:flujo-config", "auditx:flujo-cambio", "auditx:alertas-cambio", "auditx:proyecto-cambio", "auditx:tareas-cambio"]);
   pintar();
   return h;
 }

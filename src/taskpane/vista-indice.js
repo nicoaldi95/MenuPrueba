@@ -7,6 +7,7 @@
  */
 
 import flujo from "./flujo.js";
+import proyecto from "./proyecto.js";
 import { CATALOGO, SECCIONES } from "./catalogo.js";
 import { PAQUETES } from "./botones.config.js";
 import { el, campo, selectorUsuario, enCambios, mensaje } from "./ui.js";
@@ -40,7 +41,10 @@ export function montarIndice(inicial = {}) {
       c.classList.add("fl");
       const h = el("div", "fl-tit");
       h.append(el("span", "fl-codigo", "M2-02"), el("span", "fl-nombre", "Índice de papeles de trabajo"));
-      c.append(h, selectorUsuario());
+      c.append(h);
+      const py = proyecto.proyecto();
+      if (py.entidad) c.append(el("p", "fm-ayuda", py.entidad + (py.nit ? " · NIT " + py.nit : "") + (py.desde && py.hasta ? " · " + py.desde + " a " + py.hasta : "")));
+      c.append(selectorUsuario());
 
       const txt = campo({ id: "i-texto", etiqueta: "Buscar papel de trabajo", valor: filtros.texto });
       txt.ctrl.type = "search";
