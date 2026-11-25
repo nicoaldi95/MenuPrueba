@@ -18,6 +18,7 @@
  *   previsto  día en que se desarrolla (solo para "flujo")
  *   enFlujo   true: el papel participa en elaborar → revisar → firmar
  *   nuevo     true: opción que no existe en el Ribbon actual
+ *   permiso   id de acción de la matriz de permisos: la opción solo se ve si el perfil del usuario la tiene
  */
 
 export const AJUSTES = {
@@ -45,7 +46,7 @@ export const PAQUETES = [
         hijos: [
           { tipo: "boton", id: "empresa", etiqueta: "Configurar Empresa", accion: "flujo", codigo: "M2-01", previsto: "Mié 11 nov" },
           { tipo: "boton", id: "onedrive", etiqueta: "Carpeta OneDrive", accion: "flujo", codigo: "M2-01", previsto: "Mié 11 nov" },
-          { tipo: "boton", id: "personalizar", etiqueta: "Personalizar Botones", accion: "flujo", codigo: "M1-02", previsto: "Mar 10 nov" },
+          { tipo: "boton", id: "personalizar", etiqueta: "Personalizar Botones", accion: "flujo", codigo: "M1-02", previsto: "Mar 10 nov", permiso: "personalizar-botones" },
           { tipo: "boton", id: "logo", etiqueta: "Cambiar logo de los papeles de trabajo", accion: "pendiente", codigo: "M1-02" },
           { tipo: "boton", id: "actualizar-pt", etiqueta: "Actualizar Información de los Papeles de Trabajo", accion: "pendiente", codigo: "M2-08" },
         ],

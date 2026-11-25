@@ -14,7 +14,7 @@ export function montarEmpresas(c) {
   let edicion = null; // null | "nuevo" | id
   let confirmar = null;
   let borrador = null;
-  let mismo = true;
+  let equipoSel = null; // null = todos marcados
 
   const pintar = () => {
     c.textContent = "";
@@ -23,12 +23,12 @@ export function montarEmpresas(c) {
     h.append(el("span", "fl-codigo", "M2-01"), el("span", "fl-nombre", "Crear otras empresas"));
     c.append(h, selectorUsuario());
     const yo = flujo.usuarioActual();
-    const admin = flujo.puedeAdministrar(yo.id);
+    const admin = flujo.puedeCrearEmpresas(yo.id);
     const lista = empresas.listar();
 
-    c.append(el("p", "fm-ayuda", "Cada empresa adicional es un encargo propio. Si ya creó usuarios, puede asignarlos a la nueva empresa con los mismos roles."));
+    c.append(el("p", "fm-ayuda", "Cada empresa adicional es un encargo propio. Elija qué usuarios la atienden; conservan los mismos roles. El equipo debe incluir al menos un Socio, Gerente o Aud. Independiente."));
     c.append(el("p", "fm-ayuda", lista.length + (lista.length === 1 ? " empresa adicional" : " empresas adicionales") + " · sin límite"));
-    if (!admin) c.append(mensaje("Solo el perfil «" + flujo.nombreRol("aprueba") + "» puede crear o modificar empresas. Usted puede consultarlas.", "aviso"));
+    if (!admin) c.append(mensaje("Solo los perfiles " + flujo.PERFILES_CREAN_EMPRESAS.map(flujo.nombrePerfil).join(", ") + " pueden crear o modificar empresas. Usted puede consultarlas.", "aviso"));
     if (aviso) c.append(mensaje(aviso.texto, aviso.tipo));
 
     if (admin && !edicion) {
@@ -103,15 +103,22 @@ export function montarEmpresas(c) {
     f.append(el("strong", null, ex ? "Editar empresa" : "Nueva empresa"));
     const cs = CAMPOS.map((k) => campo({ id: k.id, etiqueta: k.etiqueta, valor: base[k.id] || "", requerido: !!k.requerido }));
     cs.forEach((x) => f.append(x.nodo));
-    let cb = null;
+    let cbs = [];
     if (!ex) {
-      const fila = el("label", "fm-check");
-      cb = el("input");
-      cb.type = "checkbox";
-      cb.checked = mismo;
-      cb.dataset.campo = "mismoEquipo";
-      fila.append(cb, el("span", null, "Asignar el equipo actual con los mismos roles"));
-      f.append(fila);
+      const grupo = el("fieldset", "fm-grupo");
+      grupo.append(el("legend", null, "Equipo de la empresa"));
+      cbs = flujo.personas(true).map((p) => {
+        const l = el("label", "fm-check");
+        const cb = el("input");
+        cb.type = "checkbox";
+        cb.value = p.id;
+        cb.checked = equipoSel === null || equipoSel.includes(p.id);
+        cb.dataset.campo = "equipo-" + p.id;
+        l.append(cb, el("span", null, p.nombre + " · " + flujo.nombrePerfil(p.perfil) + " · " + p.roles.map(flujo.nombreRol).join(", ")));
+        grupo.append(l);
+        return cb;
+      });
+      f.append(grupo);
     }
     f.append(el("p", "fm-ayuda", "Complete el resto de la información de la empresa desde «Configurar Empresa» al abrir su encargo."));
     const acc = el("div", "fm-acciones");
@@ -131,8 +138,8 @@ export function montarEmpresas(c) {
       ev.preventDefault();
       const n = {};
       cs.forEach((k, i) => (n[CAMPOS[i].id] = k.valor()));
-      if (cb) mismo = cb.checked;
-      const r = ex ? await empresas.actualizar(ex.id, n, { por: yo.id }) : await empresas.crear(n, { por: yo.id, mismoEquipo: mismo });
+      if (!ex) equipoSel = cbs.filter((k) => k.checked).map((k) => k.value);
+      const r = ex ? await empresas.actualizar(ex.id, n, { por: yo.id }) : await empresas.crear(n, { por: yo.id, equipo: equipoSel });
       if (!r.ok) {
         borrador = n;
         aviso = { texto: r.error, tipo: "error" };
@@ -140,6 +147,7 @@ export function montarEmpresas(c) {
         aviso = { texto: ex ? "Empresa actualizada." : "Empresa «" + r.empresa.nombre + "» creada" + (r.empresa.equipo.length ? " con " + r.empresa.equipo.length + " usuarios asignados." : "."), tipo: "ok" };
         edicion = null;
         borrador = null;
+        equipoSel = null;
       }
       pintar();
     });

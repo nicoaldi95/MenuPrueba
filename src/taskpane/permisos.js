@@ -41,6 +41,10 @@ const MATRIZ = {
   "documentar-alertas": ["socio", "gerente", "independiente", "senior"],
 };
 
+/* Como en el original: solo estos perfiles crean empresas adicionales, y cada empresa debe tener al menos uno en su equipo. */
+export const PERFILES_CREAN_EMPRESAS = ["socio", "gerente", "independiente"];
+export const puedeCrearEmpresas = (perfil) => PERFILES_CREAN_EMPRESAS.includes(perfil);
+
 export const PERFIL_POR_DEFECTO = "asistente";
 
 export const puedePerfil = (perfil, accion) => !!MATRIZ[accion] && MATRIZ[accion].includes(perfil) && !(ACCIONES.find((a) => a.id === accion) || {}).noAplica;

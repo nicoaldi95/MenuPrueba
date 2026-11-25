@@ -26,6 +26,7 @@ import { montarAA02, montarAA03 } from "./vista-aa02-03.js";
 import { montarPapelHoja } from "./vista-hoja.js";
 import { montarEmpresas } from "./vista-empresas.js";
 import { montarTI } from "./vista-ti.js";
+import { montarPersonalizar } from "./vista-nombres.js";
 
 /* global document, window */
 
@@ -362,25 +363,92 @@ export const montarEmpresa = vistaFormulario({
 
 /* ===================================================================== Carpeta OneDrive */
 
-export const montarOneDrive = vistaFormulario({
-  titulo: "Carpeta OneDrive",
-  sub: "Configurar Empresa",
-  seccion: "Configurar Empresa",
-  leer: () => proyecto.empresa(),
-  campos: () => [
-    {
-      id: "rutaOneDrive",
-      etiqueta: "Ruta de la carpeta OneDrive sincronizada",
-      ayuda: "Igual que en el VBA: aquí se guarda la ruta de la carpeta con los archivos AuditX. El complemento no abre carpetas del equipo; la ruta queda registrada para el proyecto.",
-    },
-  ],
-  guardar: (n, o) => proyecto.guardarEmpresa(n, o),
-});
+export function montarOneDrive(c) {
+  let aviso = null;
+  let borrador = null;
+  const pintar = () => {
+    cabecera(c, "Carpeta OneDrive", "M2-01");
+    const yo = flujo.usuarioActual();
+    const admin = flujo.puedeAdministrar(yo.id);
+    const mia = proyecto.rutaOneDrive(yo.id);
+    c.append(el("p", "fm-ayuda", "Cada persona registra la ruta de su carpeta de AuditX en su equipo. Cópiela desde el Explorador de archivos: clic derecho sobre la carpeta → «Copiar como ruta de acceso»."));
+    if (proyecto.exigeOneDrive() && !mia) c.append(mensaje("Este proyecto pide que cada usuario registre su carpeta OneDrive. Usted aún no la ha registrado.", "aviso"));
+
+    const f = el("form", "fm-form");
+    const r = campo({ id: "rutaOneDrive", etiqueta: "Mi carpeta OneDrive (" + yo.nombre + ")", valor: borrador != null ? borrador : mia, ayuda: "Ejemplo: C:\\Users\\su-nombre\\OneDrive\\AuditX" });
+    const g = el("button", "fl-btn", mia ? "Cambiar mi carpeta" : "Guardar mi carpeta");
+    g.type = "submit";
+    f.append(r.nodo, g);
+    f.addEventListener("submit", async (ev) => {
+      ev.preventDefault();
+      const res = await proyecto.guardarRutaOneDrive(yo.id, r.valor(), { por: yo.id });
+      borrador = res.ok ? null : r.valor();
+      aviso = res.ok ? { texto: res.sinCambios ? "La ruta ya estaba registrada." : "Carpeta guardada.", tipo: "ok" } : { texto: res.error, tipo: "error" };
+      pintar();
+    });
+    c.append(f);
+    if (aviso) c.append(mensaje(aviso.texto, aviso.tipo));
+
+    /* --- exigirla a todos --- */
+    const fila = el("label", "fm-check");
+    const cb = el("input");
+    cb.type = "checkbox";
+    cb.checked = proyecto.exigeOneDrive();
+    cb.disabled = !admin;
+    cb.dataset.campo = "exigir";
+    cb.addEventListener("change", async () => {
+      const res = await proyecto.guardarExigirOneDrive(cb.checked, { por: yo.id });
+      aviso = res.ok ? null : { texto: res.error, tipo: "error" };
+      pintar();
+    });
+    fila.append(cb, el("span", null, "Pedir la carpeta OneDrive a cada usuario"));
+    c.append(fila);
+    if (!admin) c.append(el("p", "fm-ayuda", "Solo el perfil «" + flujo.nombreRol("aprueba") + "» cambia esta opción."));
+
+    /* --- quién ya la registró --- */
+    const sec = el("section", "fl-hist");
+    sec.append(el("h3", null, "Carpetas registradas"));
+    flujo.personas(true).forEach((p) => {
+      const ruta = proyecto.rutaOneDrive(p.id);
+      const it = el("div", "fl-hist-item");
+      it.dataset.persona = p.id;
+      const l1 = el("div", "fl-hist-l1");
+      l1.append(el("strong", null, p.nombre), el("span", null, ruta ? " · Registrada" : " · Pendiente"));
+      it.append(l1);
+      if (ruta && (admin || p.id === yo.id)) it.append(el("div", "fl-hist-nota", ruta));
+      sec.append(it);
+    });
+    c.append(sec);
+
+    /* --- cambios y ayuda --- */
+    const hist = proyecto.historial().filter((h) => h.seccion === "Carpeta OneDrive");
+    if (admin && hist.length) {
+      const hs = el("section", "fl-hist");
+      hs.append(el("h3", null, "Cambios registrados"));
+      hist.slice(0, 8).forEach((h) => {
+        const it = el("div", "fl-hist-item");
+        it.append(el("div", "fl-hist-l2", [h.por.nombre, fmtFecha(h.fecha)].join(" · ")));
+        h.cambios.forEach((x) => it.append(el("div", "fl-hist-nota", x)));
+        hs.append(it);
+      });
+      c.append(hs);
+    }
+    const a = el("a", "fm-ayuda", "Ver el video de ayuda");
+    a.href = "https://www.auditool.org/blog/webinars1/video/k-configurar-ruta-onedrive";
+    a.target = "_blank";
+    a.rel = "noopener noreferrer";
+    c.append(a);
+  };
+  const h = enCambios(c, pintar, ["auditx:flujo-usuario", "auditx:flujo-config", "auditx:proyecto-cambio"]);
+  pintar();
+  return h;
+}
 
 export const VISTAS = {
   usuarios: montarUsuarios,
   "info-proyecto": montarInfoProyecto,
   "crear-empresas": montarEmpresas,
+  personalizar: montarPersonalizar,
   empresa: montarEmpresa,
   onedrive: montarOneDrive,
   "estatus-firmas": montarEstatus,

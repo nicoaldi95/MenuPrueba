@@ -32,6 +32,7 @@ const vacio = () => ({
   proyecto: { entidad: "", nit: "", firma: "", desde: "", hasta: "", encargo: "", tipo: TIPOS_ENCARGO[0], marco: MARCOS[0], fechaInforme: "" },
   empresa: { razonSocial: "", nombreComercial: "", representante: "", actividad: "", ciudad: "", direccion: "", correo: "", telefono: "", rutaOneDrive: "" },
   cronograma: cronogramaVacio(),
+  onedrive: { exigir: false, rutas: {} }, // la ruta es de cada persona, no de la empresa
   historial: [],
   actualizado: "",
 });
@@ -111,6 +112,44 @@ async function guardarEmpresa(nuevo, { por } = {}) {
   datos.empresa = e;
   await persistir();
   document.dispatchEvent(new CustomEvent("auditx:proyecto-cambio", { detail: { seccion: "empresa" } }));
+  return { ok: true };
+}
+
+/* ------------------------------------------------------------------ carpeta OneDrive (por persona) */
+
+/* Acepta «C:\\…», «\\\\servidor\\…» o «/…» (Mac); quita comillas y barra final (Windows pega «Copiar como ruta» con comillas). */
+const limpiarRuta = (t) => {
+  let r = String(t || "").trim().replace(/^["']+|["']+$/g, "").trim();
+  if (r.length > 3) r = r.replace(/[\\/]+$/, "");
+  return r;
+};
+const RUTA_VALIDA = /^([A-Za-z]:[\\/]|\\\\|\/)/;
+
+async function guardarRutaOneDrive(pid, ruta, { por } = {}) {
+  const quien = flujo.persona(pid);
+  if (!quien) return { ok: false, error: "No existe ese usuario." };
+  if (por !== pid && !flujo.puedeAdministrar(por)) return { ok: false, error: "Cada usuario registra su propia carpeta." };
+  const r = limpiarRuta(ruta);
+  if (!r) return { ok: false, error: "Escriba la ruta de la carpeta." };
+  if (!RUTA_VALIDA.test(r)) return { ok: false, error: "Escriba la ruta completa, por ejemplo C:\\Users\\su-nombre\\OneDrive\\AuditX." };
+  const antes = datos.onedrive.rutas[pid] || "";
+  if (antes === r) return { ok: true, sinCambios: true };
+  anotar("Carpeta OneDrive", [quien.nombre + ": «" + (antes || "—") + "» → «" + r + "»"], por);
+  datos.onedrive.rutas[pid] = r;
+  await persistir();
+  document.dispatchEvent(new CustomEvent("auditx:proyecto-cambio", { detail: { seccion: "onedrive" } }));
+  return { ok: true };
+}
+
+/* «Exigir carpeta OneDrive» (casilla del formulario Configurar empresa del VBA): pide la ruta a cada usuario. */
+async function guardarExigirOneDrive(valor, { por } = {}) {
+  const sin = permiso(por);
+  if (sin) return { ok: false, error: sin };
+  if (!!datos.onedrive.exigir === !!valor) return { ok: true, sinCambios: true };
+  anotar("Carpeta OneDrive", ["Pedir la carpeta OneDrive a cada usuario: " + (valor ? "sí" : "no")], por);
+  datos.onedrive.exigir = !!valor;
+  await persistir();
+  document.dispatchEvent(new CustomEvent("auditx:proyecto-cambio", { detail: { seccion: "onedrive" } }));
   return { ok: true };
 }
 
@@ -209,6 +248,7 @@ async function iniciar() {
   const base = vacio();
   datos.proyecto = { ...base.proyecto, ...datos.proyecto };
   datos.empresa = { ...base.empresa, ...datos.empresa };
+  datos.onedrive = { exigir: false, ...(datos.onedrive || {}), rutas: { ...((datos.onedrive || {}).rutas || {}) } };
   datos.historial = datos.historial || [];
   const cr = cronogramaVacio();
   datos.cronograma = { fechasClave: (datos.cronograma && datos.cronograma.fechasClave) || cr.fechasClave, eventos: (datos.cronograma && datos.cronograma.eventos) || [] };
@@ -236,6 +276,10 @@ const api = {
   hoyISO,
   guardarProyecto,
   guardarEmpresa,
+  rutaOneDrive: (pid) => datos.onedrive.rutas[pid] || "",
+  exigeOneDrive: () => !!datos.onedrive.exigir,
+  guardarRutaOneDrive,
+  guardarExigirOneDrive,
   _reiniciar: async () => {
     datos = vacio();
     await persistir();

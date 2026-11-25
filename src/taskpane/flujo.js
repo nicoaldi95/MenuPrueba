@@ -16,7 +16,7 @@
 
 import { PAQUETES } from "./botones.config.js";
 import { ROLES, REGLAS, PERSONAS, ALMACEN } from "./flujo.config.js";
-import { puedePerfil, perfilDesdeRoles, PERFILES, ACCIONES, nombrePerfil, matriz } from "./permisos.js";
+import { puedeCrearEmpresas as perfilCreaEmpresas, PERFILES_CREAN_EMPRESAS, puedePerfil, perfilDesdeRoles, PERFILES, ACCIONES, nombrePerfil, matriz } from "./permisos.js";
 import { crearAlmacen } from "./almacen.js";
 
 /* global window, document */
@@ -48,12 +48,18 @@ let cola = Promise.resolve(); // las escrituras se hacen de una en una
 const ahora = () => new Date().toISOString();
 const copia = (o) => JSON.parse(JSON.stringify(o));
 
+/* Cómo se muestra el nombre de un papel (lo cambia «Personalizar Botones»; el id interno no cambia). */
+let rotulo = (e) => e.etiqueta;
+function usarRotulo(fn) {
+  rotulo = typeof fn === "function" ? fn : (e) => e.etiqueta;
+}
+
 function papelesDelMenu() {
   const lista = [];
   const recorrer = (entradas) =>
     entradas.forEach((e) => {
       if (e.tipo === "menu") recorrer(e.hijos);
-      else if (e.enFlujo) lista.push({ id: e.id, etiqueta: e.etiqueta, codigo: e.codigo || "" });
+      else if (e.enFlujo) lista.push({ id: e.id, etiqueta: rotulo(e), codigo: e.codigo || "" });
     });
   PAQUETES.forEach((p) => recorrer(p.entradas));
   return lista;
@@ -396,6 +402,11 @@ async function guardarPersonas(lista) {
 
 /* ------------------------------------------------------------------ usuarios y perfiles */
 
+function puedeCrearEmpresas(pid) {
+  const x = persona(pid);
+  return !!x && x.activo !== false && perfilCreaEmpresas(x.perfil);
+}
+
 function puedeAdministrar(pid) {
   const x = persona(pid);
   return !!x && x.activo !== false && REGLAS.puedenAdministrarUsuarios.some((r) => x.roles.includes(r));
@@ -572,6 +583,9 @@ const api = {
   papeles: () => papelesDelMenu(),
   personas: (soloActivas) => copia(datos.personas.filter((x) => !soloActivas || x.activo !== false)),
   puedeAdministrar,
+  usarRotulo,
+  puedeCrearEmpresas,
+  PERFILES_CREAN_EMPRESAS,
   puede,
   PERFILES,
   ACCIONES,

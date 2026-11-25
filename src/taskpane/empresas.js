@@ -69,24 +69,39 @@ function validar(n, id) {
 }
 
 function permiso(por) {
-  return flujo.puedeAdministrar(por) ? null : "Solo " + flujo.nombreRol("aprueba") + " puede crear o modificar empresas.";
+  return flujo.puedeCrearEmpresas(por) ? null : "Solo los perfiles " + flujo.PERFILES_CREAN_EMPRESAS.map(flujo.nombrePerfil).join(", ") + " pueden crear o modificar empresas.";
 }
 
-/* Con «mismoEquipo» la nueva empresa recibe a los usuarios activos con los mismos roles (como decía el formulario). */
-async function crear(n, { por, mismoEquipo = true } = {}) {
+/*
+ * Equipo de la nueva empresa. Como en el formulario original (selección de usuarios):
+ *   · hay que elegir al menos un usuario, y
+ *   · al menos uno debe ser Socio, Gerente o Aud. Independiente.
+ * Sin «equipo» se toman todos los usuarios activos (con «mismoEquipo: false» no se toma ninguno y se pide elegir).
+ */
+function armarEquipo(equipo, mismoEquipo) {
+  const activos = flujo.personas(true);
+  const ids = Array.isArray(equipo) ? equipo : mismoEquipo ? activos.map((p) => p.id) : [];
+  const sel = activos.filter((p) => ids.includes(p.id));
+  if (!sel.length) return { error: "Seleccione al menos un usuario para el equipo de la empresa." };
+  if (!sel.some((p) => flujo.PERFILES_CREAN_EMPRESAS.includes(p.perfil))) return { error: "El equipo debe incluir al menos un Socio, Gerente o Aud. Independiente." };
+  return { equipo: sel.map((p) => ({ id: p.id, nombre: p.nombre, cargo: p.cargo, perfil: p.perfil, roles: p.roles.slice() })) };
+}
+
+async function crear(n, { por, equipo, mismoEquipo = true } = {}) {
   const sin = permiso(por);
   if (sin) return { ok: false, error: sin };
   if (LIMITE && datos.lista.length >= LIMITE) return { ok: false, error: "Se alcanzó el límite de " + LIMITE + " empresas." };
   const v = validar(n, null);
   if (v.error) return { ok: false, error: v.error };
+  const q = armarEquipo(equipo, mismoEquipo);
+  if (q.error) return { ok: false, error: q.error };
   const x = flujo.persona(por);
-  const equipo = mismoEquipo ? flujo.personas(true).map((p) => ({ id: p.id, nombre: p.nombre, cargo: p.cargo, roles: p.roles.slice() })) : [];
   const emp = {
     id: "emp-" + Date.now().toString(36) + Math.random().toString(36).slice(2, 5),
     ...v.e,
     creada: new Date().toISOString(),
     por: x ? { id: x.id, nombre: x.nombre } : { id: por, nombre: "Desconocido" },
-    equipo,
+    equipo: q.equipo,
     expediente: "Por crear en SharePoint",
   };
   datos.lista.push(emp);

@@ -24,6 +24,7 @@ import { iniciarTema } from "./tema.js";
 import hojaTI from "./hoja-ti.js";
 import { montarFicha } from "./flujo-ficha.js";
 import proyecto from "./proyecto.js";
+import nombres from "./nombres.js";
 import empresas from "./empresas.js";
 import alertas from "./alertas.js";
 import { VISTAS } from "./vistas.js";
@@ -63,8 +64,19 @@ function guardarPaquete(id) {
   }
 }
 
+/* Nombre que se ve (puede estar personalizado); el id interno nunca cambia. */
+const rotulo = (e) => nombres.etiqueta(e);
+
+/* Una opción con «permiso» solo se ve si el perfil del usuario actual lo tiene (p. ej. Personalizar Botones). */
+function visible(e) {
+  if (!e.permiso) return true;
+  if (!flujo.listo()) return false; // aún no se cargó quién es el usuario: se vuelve a dibujar al terminar
+  const u = flujo.usuarioActual();
+  return !!u && flujo.puede(u.id, e.permiso);
+}
+
 function contarBotones(entradas) {
-  return entradas.reduce((n, e) => n + (e.tipo === "menu" ? contarBotones(e.hijos) : 1), 0);
+  return entradas.filter(visible).reduce((n, e) => n + (e.tipo === "menu" ? contarBotones(e.hijos) : 1), 0);
 }
 
 function normalizar(t) {
@@ -103,9 +115,9 @@ function dibujarBoton(entrada, nivel) {
   const b = el("button", nivel === 0 ? "tp-standalone" : nivel === 1 ? "tp-item" : "tp-item-sub");
   b.type = "button";
   b.dataset.id = entrada.id;
-  b.dataset.label = entrada.etiqueta;
+  b.dataset.label = rotulo(entrada);
   b.dataset.accion = entrada.accion;
-  const nombre = el("span", "tp-btn-nombre", entrada.etiqueta);
+  const nombre = el("span", "tp-btn-nombre", rotulo(entrada));
   b.appendChild(nombre);
 
   const marcas = el("span", "tp-marcas");
@@ -152,7 +164,7 @@ function dibujarMenu(entrada, nivel) {
   const cuerpo = el("div", nivel === 0 ? "tp-group" : "tp-subgroup");
   cuerpo.id = idPanel;
   cuerpo.hidden = nivel !== 0;
-  entrada.hijos.forEach((h) => cuerpo.appendChild(h.tipo === "menu" ? dibujarMenu(h, nivel + 1) : dibujarBoton(h, nivel + 1)));
+  entrada.hijos.filter(visible).forEach((h) => cuerpo.appendChild(h.tipo === "menu" ? dibujarMenu(h, nivel + 1) : dibujarBoton(h, nivel + 1)));
 
   t.addEventListener("click", () => {
     const abierto = t.getAttribute("aria-expanded") === "true";
@@ -169,7 +181,7 @@ function dibujarPaquete() {
   const lista = raiz.querySelector("#list");
   lista.innerHTML = "";
   contadorMenus = 0;
-  p.entradas.forEach((e) => lista.appendChild(e.tipo === "menu" ? dibujarMenu(e, 0) : dibujarBoton(e, 0)));
+  p.entradas.filter(visible).forEach((e) => lista.appendChild(e.tipo === "menu" ? dibujarMenu(e, 0) : dibujarBoton(e, 0)));
 
   const n = contarBotones(p.entradas);
   raiz.querySelector("#tp-pkg-nombre").textContent = p.nombre;
@@ -231,7 +243,7 @@ function mostrarBusqueda(texto) {
   PAQUETES.forEach((p) => {
     const coincide = [];
     indice.forEach((v, id) => {
-      if (v.paquete.id === p.id && normalizar(v.entrada.etiqueta + " " + v.ruta.join(" ") + " " + (v.entrada.codigo || "")).includes(q))
+      if (v.paquete.id === p.id && visible(v.entrada) && normalizar(rotulo(v.entrada) + " " + v.entrada.etiqueta + " " + v.ruta.join(" ") + " " + (v.entrada.codigo || "")).includes(q))
         coincide.push(v);
     });
     if (!coincide.length) return;
@@ -296,14 +308,14 @@ async function navegar(id) {
   const e = reg.entrada;
 
   if (e.accion === "pendiente") {
-    marcarActivo(id, e.etiqueta);
-    avisar("«" + e.etiqueta + "» se desarrolla después del " + AJUSTES.fechaCorte + ". Ya está en su lugar del menú.", "info");
+    marcarActivo(id, rotulo(e));
+    avisar("«" + rotulo(e) + "» se desarrolla después del " + AJUSTES.fechaCorte + ". Ya está en su lugar del menú.", "info");
     return;
   }
 
   if (e.accion === "enlace") {
     if (!e.url) {
-      avisar("Falta configurar la dirección web de «" + e.etiqueta + "» en botones.config.js.", "aviso");
+      avisar("Falta configurar la dirección web de «" + rotulo(e) + "» en botones.config.js.", "aviso");
       return;
     }
     window.open(e.url, "_blank", "noopener");
@@ -313,7 +325,7 @@ async function navegar(id) {
   if (e.accion === "hoja") {
     const r = await abrirHoja(e.hoja);
     if (r.ok) {
-      marcarActivo(id, e.etiqueta);
+      marcarActivo(id, rotulo(e));
       avisar("Se abrió la hoja «" + e.hoja + "».", "ok");
     } else if (r.motivo === "no-existe") {
       avisar("La hoja «" + e.hoja + "» no existe en este libro.", "error");
@@ -324,12 +336,12 @@ async function navegar(id) {
     }
   }
 
-  const detalle = { id, label: e.etiqueta, paquete: reg.paquete.id, accion: e.accion, hoja: e.hoja || null, handled: false };
+  const detalle = { id, label: rotulo(e), paquete: reg.paquete.id, accion: e.accion, hoja: e.hoja || null, handled: false };
   if (e.accion === "hoja") detalle.handled = true;
   document.dispatchEvent(new CustomEvent("auditx:navigate", { detail: detalle }));
 
   if (e.accion === "flujo") {
-    marcarActivo(id, e.etiqueta);
+    marcarActivo(id, rotulo(e));
     if (detalle.handled) return;
     if (VISTAS[id]) {
       abrirVista(id, VISTAS[id]);
@@ -340,7 +352,7 @@ async function navegar(id) {
       abrirVista(id, montarFicha);
       return;
     }
-    avisar("«" + e.etiqueta + "» aún no está construida. Prevista: " + (e.previsto || "por definir") + ".", "info");
+    avisar("«" + rotulo(e) + "» aún no está construida. Prevista: " + (e.previsto || "por definir") + ".", "info");
   }
 }
 
@@ -427,6 +439,16 @@ function irA(id) {
   navegar(id);
 }
 
+/* Vuelve a dibujar el menú (cambió un nombre o la persona que actúa) sin perder la búsqueda ni la opción abierta. */
+function refrescarMenu() {
+  if (!raiz) return;
+  dibujarPaquete();
+  const q = raiz.querySelector("#search");
+  if (q && q.value) mostrarBusqueda(q.value);
+  const activo = raiz.querySelector(".is-active[data-id]");
+  if (activo && indice.has(activo.dataset.id)) raiz.querySelector("#activeTitle").textContent = rotulo(indice.get(activo.dataset.id).entrada);
+}
+
 /* ------------------------------------------------------------------ arranque */
 
 export async function iniciarPanel() {
@@ -445,12 +467,15 @@ export async function iniciarPanel() {
   window.AuditX = window.AuditX || {};
   window.AuditX.panel = { marcarEstado, irA, abrirPapel, abrirVista, abrirHoja, abrirHojaDe, paquetes: PAQUETES, retirados: RETIRADOS };
   document.addEventListener("auditx:volver", cerrarVista);
+  document.addEventListener("auditx:nombres-cambio", refrescarMenu);
+  document.addEventListener("auditx:flujo-usuario", refrescarMenu);
   document.dispatchEvent(new CustomEvent("auditx:panel-listo"));
 
   // Motor del flujo: lee el historial guardado en el libro y pinta el estado de cada papel.
   window.AuditX.flujo = flujo;
   window.AuditX.flujo.montarFicha = montarFicha;
   window.AuditX.proyecto = proyecto;
+  window.AuditX.nombres = nombres;
   window.AuditX.empresas = empresas;
   window.AuditX.alertas = alertas;
   window.AuditX.comentarios = comentarios;
@@ -460,6 +485,8 @@ export async function iniciarPanel() {
   try {
     await flujo.iniciar();
     await proyecto.iniciar();
+    await nombres.iniciar();
+    refrescarMenu();
     await empresas.iniciar();
     await comentarios.iniciar();
     await aa01.cargar();
