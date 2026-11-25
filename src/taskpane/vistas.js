@@ -327,15 +327,21 @@ function calendarioPapeles(c, yo, lectura, repintar) {
 export const montarInfoProyecto = vistaFormulario({
   titulo: "Información del proyecto",
   sub: "M2-01",
-  leer: () => proyecto.proyecto(),
+  leer: () => {
+    const k = (id) => { const x = proyecto.cronograma().fechasClave.find((y) => y.id === id) || {}; return x.aplica ? x.fecha || "" : ""; };
+    return { ...proyecto.proyecto(), corte1: k("planificacion"), corte2: k("precierre") };
+  },
   campos: () => [
     { id: "entidad", etiqueta: "Entidad (cliente)", requerido: true },
     { id: "nit", etiqueta: "NIT / ID" },
+    { id: "firma", etiqueta: "Firma de auditoría", ayuda: "Aparece como «Presentado por» en las presentaciones y los informes." },
     { id: "encargo", etiqueta: "Nombre del encargo" },
     { id: "tipo", etiqueta: "Tipo de encargo", tipo: "select", opciones: TIPOS_ENCARGO },
     { id: "marco", etiqueta: "Marco normativo", tipo: "select", opciones: MARCOS },
-    { id: "desde", etiqueta: "Período de auditoría desde", tipo: "date" },
-    { id: "hasta", etiqueta: "Hasta", tipo: "date" },
+    { id: "desde", etiqueta: "Período de auditoría desde", tipo: "date", requerido: true },
+    { id: "corte1", etiqueta: "Corte 1 · planificación (opcional)", tipo: "date" },
+    { id: "corte2", etiqueta: "Corte 2 · pre-cierre (opcional)", tipo: "date" },
+    { id: "hasta", etiqueta: "Corte final · cierre del período (hasta)", tipo: "date", requerido: true },
     { id: "fechaInforme", etiqueta: "Fecha prevista del informe", tipo: "date" },
   ],
   guardar: (n, o) => proyecto.guardarProyecto(n, o),
