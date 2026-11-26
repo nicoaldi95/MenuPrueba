@@ -169,7 +169,7 @@ function montarListado(modo) {
   const titulo = modo === "firmados" ? "Papeles firmados" : "Papeles pendientes de firma";
   const codigo = modo === "firmados" ? "M2-02" : "M2-02 / M8-04";
   return (c) => {
-    const filtros = { texto: "", estado: "", persona: "", mios: false, vencidos: false };
+    const filtros = { texto: "", estado: "", persona: "", mios: true, vencidos: false };
     const pintar = () => {
       c.textContent = "";
       c.classList.add("fl");
@@ -219,11 +219,39 @@ function montarListado(modo) {
         l.append(cb, el("span", null, txt2));
         checks.append(l);
       };
-      if (modo === "pendientes") mk("f-mios", "Solo lo que me toca a mí", "mios");
+      mk("f-mios", modo === "pendientes" ? "Solo lo que me toca a mí" : "Solo los papeles en que participé yo", "mios");
       if (modo === "pendientes") mk("f-vencidos", "Solo vencidos", "vencidos");
       barra.append(checks);
       c.append(barra);
 
+      if (modo === "pendientes") {
+        const por = { prepara: 0, revisa: 0, supervisa: 0, aprueba: 0 };
+        flujo.pendientesDe(yo.id).forEach((f) => {
+          const a = flujo.acciones(f.id, yo.id).find((x) => x.disponible);
+          if (a && a.rol in por) por[a.rol]++;
+        });
+        const txt3 = { prepara: "por preparar", revisa: "por revisar", supervisa: "por supervisar", aprueba: "por aprobar" };
+        const partes = Object.keys(por).filter((r) => por[r]).map((r) => por[r] + " " + txt3[r]);
+        const res = el("p", "fl-msg", partes.length ? "Le toca a usted: " + partes.join(" · ") + "." : "No tiene papeles pendientes por su parte.");
+        res.dataset.seccion = "mis-pendientes";
+        c.append(res);
+      }
+      const part = (f) => {
+        const q = flujo.quienYComo(f.id);
+        const r = [];
+        if (q.elaboro && q.elaboro.id === yo.id) r.push("elaboró");
+        if (q.reviso.some((x) => x.persona && x.persona.id === yo.id)) r.push("revisó");
+        if (q.firmo && q.firmo.id === yo.id) r.push("firmó");
+        return r;
+      };
+      if (modo === "firmados") {
+        const n = { elaboró: 0, revisó: 0, firmó: 0 };
+        base.forEach((f) => part(f).forEach((x) => n[x]++));
+        const partes = Object.keys(n).filter((k) => n[k]).map((k) => k + " " + n[k]);
+        const res = el("p", "fl-msg", partes.length ? "Usted: " + partes.join(" · ") + "." : "Usted no ha participado en papeles firmados.");
+        res.dataset.seccion = "mis-firmados";
+        c.append(res);
+      }
       const cuenta = el("p", "fm-ayuda");
       const cont = el("div", "es-lista");
       c.append(cuenta, cont);
@@ -235,7 +263,7 @@ function montarListado(modo) {
           if (t && !(f.id + " " + f.etiqueta).toLowerCase().includes(t)) return false;
           if (filtros.estado && f.estado !== filtros.estado) return false;
           if (filtros.persona && !Object.values(f.asignados).some((pid) => (flujo.persona(pid) || {}).nombre === filtros.persona)) return false;
-          if (filtros.mios && !mios.has(f.id)) return false;
+          if (filtros.mios && (modo === "firmados" ? !part(f).length : !mios.has(f.id))) return false;
           if (filtros.vencidos && !f.vencido) return false;
           return true;
         });
@@ -257,6 +285,8 @@ function montarListado(modo) {
           t2.append(l1);
           if (modo === "firmados") {
             const q = flujo.quienYComo(f.id);
+            const pp = part(f);
+            if (pp.length) t2.append(el("div", "fl-hist-l2", "Usted " + pp.join(", ")));
             t2.append(el("div", "fl-hist-l2", q.firmo ? "Firmó " + q.firmo.nombre + " · " + q.firmo.cargo + " · " + fmtFecha(q.firmo.fecha) : ""));
           }
           flujo.rolesActivos().forEach((r) => t2.append(lineaRol(f, r.id)));
