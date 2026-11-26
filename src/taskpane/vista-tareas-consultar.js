@@ -4,6 +4,7 @@
  * «Todas las tareas»: consulta con filtros (en el original era la hoja completa, visible para todos).
  */
 
+import { botonHoja } from "./informes.js";
 import flujo from "./flujo.js";
 import tareas from "./tareas.js";
 import { el, campo, mensaje, selectorUsuario, enCambios, fmtFecha } from "./ui.js";
@@ -25,6 +26,7 @@ export function montarConsultarTareas(c) {
     const h = el("div", "fl-tit");
     h.append(el("span", "fl-codigo", "M8-03"), el("span", "fl-nombre", "Consultar y Responder Tareas"));
     c.append(h, selectorUsuario());
+    c.append(botonHoja("tareas", "Llevar el registro a la hoja de Excel"));
     const yo = flujo.usuarioActual();
     if (aviso) c.append(mensaje(aviso.texto, aviso.tipo));
 

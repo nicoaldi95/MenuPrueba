@@ -6,6 +6,7 @@
 
 /* global window, document */
 
+import { botonHoja } from "./informes.js";
 import flujo from "./flujo.js";
 import alertas, { TIPOS, RESPUESTAS } from "./alertas.js";
 import { el, campo, mensaje, selectorUsuario, enCambios, fmtFecha } from "./ui.js";
@@ -79,6 +80,7 @@ function montar(modoDoc) {
       const h = el("div", "fl-tit");
       h.append(el("span", "fl-codigo", "M10-03"), el("span", "fl-nombre", modoDoc ? "Documentación de Alertas" : "Listado de Alertas"));
       c.append(h, selectorUsuario());
+      c.append(botonHoja("alertas", "Llevar el listado a la hoja «Listado Alertas»"));
       const yo = flujo.usuarioActual();
       if (!modoDoc) c.append(configuracion(yo));
       else {

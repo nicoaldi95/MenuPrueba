@@ -4,6 +4,7 @@
  * Reemplaza a la hoja «Dashboard Ej» y sus segmentadores; se calcula al instante con las tareas del complemento.
  */
 
+import { botonHoja } from "./informes.js";
 import flujo from "./flujo.js";
 import tareas from "./tareas.js";
 import { el, campo, selectorUsuario, enCambios, fmtFecha } from "./ui.js";
@@ -67,6 +68,7 @@ export function montarDashboardTareas(c) {
     const h = el("div", "fl-tit");
     h.append(el("span", "fl-codigo", "M10-01"), el("span", "fl-nombre", "Dashboard de Tareas"));
     c.append(h, selectorUsuario());
+    c.append(botonHoja("dash-tareas", "Llevar el dashboard a la hoja de Excel"));
     const personas = flujo.personas().map((p) => p.nombre);
 
     /* --- filtros (segmentadores del original) --- */

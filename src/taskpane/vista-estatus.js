@@ -8,6 +8,7 @@
  * Un papel que todavía no participa del flujo cuenta como pendiente.
  */
 
+import { botonHoja } from "./informes.js";
 import flujo, { ESTADO } from "./flujo.js";
 import { CATALOGO, SECCIONES } from "./catalogo.js";
 import { montarIndice } from "./vista-indice.js";
@@ -49,6 +50,7 @@ export function montarEstatus(c) {
     const h = el("div", "fl-tit");
     h.append(el("span", "fl-codigo", "M2-02"), el("span", "fl-nombre", "Estatus de Firmas PT"));
     c.append(h, selectorUsuario());
+    c.append(botonHoja("estatus", "Llevar a la hoja «Estatus PT Auditoria»"));
 
     const r = resumen();
     const grid = el("div", "es-kpis");

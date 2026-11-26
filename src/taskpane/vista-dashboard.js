@@ -4,6 +4,7 @@
  * «Fase» = sección del índice (Pre-Planificación, Planificación, Sustantivas…).
  */
 
+import { botonHoja } from "./informes.js";
 import flujo, { ESTADO } from "./flujo.js";
 import proyecto from "./proyecto.js";
 import alertas from "./alertas.js";
@@ -28,6 +29,7 @@ export function montarDashboard(c) {
     c.append(h);
     if (p.entidad) c.append(el("p", "fm-ayuda", p.entidad + (p.desde && p.hasta ? " · " + p.desde + " a " + p.hasta : "")));
     c.append(selectorUsuario());
+    c.append(botonHoja("dash-proyecto", "Llevar el dashboard a la hoja de Excel"));
     const yo = flujo.usuarioActual();
     const r = resumen();
     const todos = flujo.listar();

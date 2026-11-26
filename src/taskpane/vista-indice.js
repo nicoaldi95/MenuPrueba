@@ -6,6 +6,7 @@
  * flujo muestran su estado y abren su ficha.
  */
 
+import { botonHoja } from "./informes.js";
 import flujo from "./flujo.js";
 import proyecto from "./proyecto.js";
 import { CATALOGO, SECCIONES } from "./catalogo.js";
@@ -45,6 +46,7 @@ export function montarIndice(inicial = {}) {
       const py = proyecto.proyecto();
       if (py.entidad) c.append(el("p", "fm-ayuda", py.entidad + (py.nit ? " · NIT " + py.nit : "") + (py.desde && py.hasta ? " · " + py.desde + " a " + py.hasta : "")));
       c.append(selectorUsuario());
+      c.append(botonHoja("indice", "Llevar el índice a la hoja «Indice»"));
 
       const txt = campo({ id: "i-texto", etiqueta: "Buscar papel de trabajo", valor: filtros.texto });
       txt.ctrl.type = "search";

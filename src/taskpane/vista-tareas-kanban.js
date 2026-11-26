@@ -4,6 +4,7 @@
  * Solo consulta (como en el original): las respuestas se registran en «Consultar y Responder Tareas».
  */
 
+import { botonHoja } from "./informes.js";
 import flujo from "./flujo.js";
 import tareas from "./tareas.js";
 import { el, campo, mensaje, selectorUsuario, enCambios, fmtFecha } from "./ui.js";
@@ -39,6 +40,7 @@ export function montarKanban(c) {
     const h = el("div", "fl-tit");
     h.append(el("span", "fl-codigo", "M10-02"), el("span", "fl-nombre", "Kanban de Tareas"));
     c.append(h, selectorUsuario());
+    c.append(botonHoja("kanban", "Llevar el tablero a la hoja de Excel"));
     c.append(el("p", "fm-ayuda", "Vea las tareas por estado, por fecha o por usuario. Para responder una tarea use «Consultar y Responder Tareas»."));
 
     /* filtros */
