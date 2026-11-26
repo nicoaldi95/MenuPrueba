@@ -11,6 +11,7 @@
 import flujo, { ESTADO } from "./flujo.js";
 import { CATALOGO, SECCIONES } from "./catalogo.js";
 import { montarIndice } from "./vista-indice.js";
+import docsCliente from "./docs-cliente.js";
 import { el, selectorUsuario, enCambios, fmtFecha, campo } from "./ui.js";
 
 /* global window, document */
@@ -94,11 +95,61 @@ export function montarEstatus(c) {
       tabla.append(tr);
     });
     c.append(tabla);
+    const ult = flujo.listar().filter((f) => f.estado === ESTADO.FIRMADO).map((f) => ({ id: f.id, q: flujo.quienYComo(f.id).firmo })).filter((x) => x.q && x.q.fecha).sort((a, b) => b.q.fecha.localeCompare(a.q.fecha))[0];
+    const pu = el("p", "fm-ayuda", ult ? "Última firma: " + ult.id + " · " + ult.q.nombre + " · " + fmtFecha(ult.q.fecha) : "Todavía no hay firmas registradas.");
+    pu.dataset.seccion = "ultima-firma";
+    c.append(pu);
+    c.append(seccionDocs());
     c.append(el("p", "fm-ayuda", "Toque una sección para ver sus papeles. Hoy " + r.enFlujo + " de " + r.total + " papeles participan del flujo; el resto cuenta como pendiente hasta que se incorporen."));
   };
-  const h = enCambios(c, pintar, ["auditx:flujo-usuario", "auditx:flujo-config", "auditx:flujo-cambio"]);
+  const h = enCambios(c, pintar, ["auditx:flujo-usuario", "auditx:flujo-config", "auditx:flujo-cambio", "auditx:docs-cliente-cambio"]);
   pintar();
   return h;
+}
+
+
+/* ===================================================================== Documentos del cliente */
+
+function seccionDocs() {
+  const s = el("div", "es-docs");
+  s.dataset.seccion = "docs-cliente";
+  const r = docsCliente.resumenDocs();
+  s.append(el("h4", "es-docs-t", "Documentos del cliente"));
+  s.append(el("p", "fm-ayuda", "Usados " + r.usados + " · Cargados " + r.cargados + " · Faltantes " + r.faltantes + " (" + Math.round(r.porcentaje * 100) + "% cargado)"));
+  const msg = el("p", "fl-msg");
+  msg.hidden = true;
+  const det = el("details", "es-docs-det");
+  det.append(el("summary", null, "Ver y marcar los " + r.usados + " documentos"));
+  docsCliente.lista().forEach((d) => {
+    const fila = el("div", "es-doc");
+    fila.dataset.doc = d.nombre;
+    const l = el("label", "fm-check");
+    const cb = el("input");
+    cb.type = "checkbox";
+    cb.checked = d.aplica;
+    cb.dataset.campo = "aplica";
+    l.append(cb, el("span", null, d.nombre + (d.cargado ? " ✓" : "")));
+    const t = el("input");
+    t.type = "text";
+    t.placeholder = "Enlace o nombre del archivo";
+    t.value = d.enlace;
+    t.disabled = !d.aplica;
+    t.dataset.campo = "enlace";
+    const guardar = async (cambio) => {
+      const res = await docsCliente.actualizar(d.nombre, cambio);
+      if (!res.ok && res.error !== "No hay cambios que guardar.") {
+        msg.hidden = false;
+        msg.dataset.tipo = "error";
+        msg.textContent = res.error;
+      }
+    };
+    cb.addEventListener("change", () => guardar({ aplica: cb.checked }));
+    t.addEventListener("change", () => guardar({ enlace: t.value }));
+    fila.append(l, t);
+    det.append(fila);
+  });
+  s.append(det, msg);
+  return s;
 }
 
 /* ===================================================================== Listados */

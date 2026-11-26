@@ -886,3 +886,9 @@ html[data-tema="oscuro"] .cm-papel { color: #a9a8a0; }
 html[data-tema="oscuro"] .cm-l2 { color: #a9a8a0; }
 html[data-tema="oscuro"] .cm-form { border-top: 1px dashed #4a4a46; }
 html[data-tema="oscuro"] .eq-persona { border-bottom: 1px dashed #3a3a37; }
+
+.es-docs { display: flex; flex-direction: column; gap: 6px; }
+.es-docs-t { margin: 8px 0 0; font-size: 12px; }
+.es-docs-det summary { cursor: pointer; font-size: 12px; color: #1d4f8c; }
+.es-doc { display: flex; flex-direction: column; gap: 3px; padding: 6px 0; border-bottom: 1px solid #eeece4; }
+.es-doc input[type=text] { font-size: 12px; padding: 4px 6px; border: 1px solid #c9c6ba; border-radius: 4px; }

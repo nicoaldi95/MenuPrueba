@@ -28,6 +28,7 @@ import nombres from "./nombres.js";
 import logo from "./logo.js";
 import tareas from "./tareas.js";
 import comunicaciones from "./comunicaciones.js";
+import docsCliente from "./docs-cliente.js";
 import actualizarPT from "./actualizar-pt.js";
 import empresas from "./empresas.js";
 import alertas from "./alertas.js";
@@ -483,6 +484,7 @@ export async function iniciarPanel() {
   window.AuditX.logo = logo;
   window.AuditX.tareas = tareas;
   window.AuditX.comunicaciones = comunicaciones;
+  window.AuditX.docsCliente = docsCliente;
   window.AuditX.actualizarPT = actualizarPT;
   window.AuditX.empresas = empresas;
   window.AuditX.alertas = alertas;
@@ -498,6 +500,7 @@ export async function iniciarPanel() {
     await actualizarPT.iniciar();
     await tareas.iniciar();
     await comunicaciones.iniciar();
+    await docsCliente.iniciar();
     refrescarMenu();
     await empresas.iniciar();
     await comentarios.iniciar();
